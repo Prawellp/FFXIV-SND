@@ -12,10 +12,14 @@
     -> 0.0.2: Filterd out fates u need to actiavte, 
               added a function that walks to the targetet enemy, 
               added a function that auto turns on Pandora and RS stuff, 
-              added a function that checks if ur mounted or not and mounts u then
+              added a function that checks if ur mounted or not and mounts you at the beginning (last version it tried to mount you even if you already where mounted)
+              added a echo notification when ur Bicolor Gems are over 900
 
   Created by: Prawellp
-  Special Thanks to: UcanPatates, Ice and croizat for the Help doing this
+
+  Special Thanks to everyone who helped me!
+
+  Known Issues: the Ping if your almost capped will keep spamming if there is no fate
 
   *********************
   *  Required Plugins *
@@ -44,6 +48,13 @@ FateS = true
 ChocoboS = true
 -- activates the Chocobo settings in Pandora
 -- Auto-Summon Chocobo and call him in fight (there is not much time where you are on ground so it will need to use it mid fight)
+
+Announce = 1
+--change this value for how much echos u want in chat 
+--2 is FateId and Bicolor gems amount
+--1 is only Bicolor gems
+--0 is nothing
+--echos will appear after it found a new fate 
 
 --[[
 
@@ -80,6 +91,7 @@ end
 
 --the actual code for the fates and loop
 while true do
+gems = GetItemCount(26807)
 
 --gets the Closest Fate
 fates = GetActiveFates()
@@ -94,6 +106,12 @@ for i = 0, fates.Count-1 do
     end
   end
 end
+--ping when your over capped
+if gems > 900 then
+  yield("/e You are Almost capped with ur Bicolor Gems! <se.3>")
+  yield("/wait 1")
+  end
+
 
 --gets the fate location
 fateX = GetFateLocationX(fateId)
@@ -104,8 +122,15 @@ LogInfo(fateX.." , "..fateY.." , "..fateZ)
 --paths to the fate
 PathfindAndMoveTo(fateX, fateY, fateZ, true)
 
-if fateId ~= 0 then
-  yield("/e "..fateId)
+--setting 1 for echo 
+if fateId ~= 0 and Announce == 1 then
+  yield("/e Gems: "..gems)
+end
+
+--setting 2 for echo 
+if fateId ~= 0 and Announce == 2 then
+  yield("/e FateId:"..fateId)
+  yield("/e Gems: "..gems)
 end
 
 --jumps when mount lands
@@ -132,15 +157,16 @@ while IsInFate() do
      yield("/rotation auto")
      yield("/wait 1")
      end
---disables rs when out of fate 
-if IsInFate() == false and GetCharacterCondition(26) == false then
-    yield("/rotation cancel")
-    yield("/wait 1")
 
-    gems = GetItemCount(26807)
-    if gems > 900 then
-    yield("/e You are Almost capped with ur Bicolor Gems"..gems)
-    end
+--starts rs manual when ur getting attacked outside the fate (had some Issues that an non fate mob attacked and you couldnt mount and didn't attack)
+if IsInFate() == false and GetCharacterCondition(26) then 
+  yield("/rotation manual")
+end
+
+--disables rs when out of fate 
+if IsInFate() == false then
+  yield("/rotation cancel")
+  yield("/wait 1")
 end
 
 --when fate done mount
