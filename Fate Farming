@@ -6,11 +6,11 @@
 
   ***********
   * Version *
-  *  0.0.3  *
+  *  0.0.4  *
   ***********
 
+    -> 0.0.4: fixed more bugs or so...
     -> 0.0.3: fixed some bugs with rs a and so
-
     -> 0.0.2: Filterd out fates u need to actiavte, 
               added a function that walks to the targetet enemy, 
               added a function that auto turns on Pandora and RS stuff, 
@@ -51,7 +51,7 @@ ChocoboS = true
 -- activates the Chocobo settings in Pandora
 -- Auto-Summon Chocobo and call him in fight (there is not much time where you are on ground so it will need to use it mid fight)
 
-Announce = 1
+Announce = 2
 --change this value for how much echos u want in chat 
 --2 is FateId and Bicolor gems amount
 --1 is only Bicolor gems
@@ -153,16 +153,23 @@ while IsInFate() and GetCharacterCondition(4) do
 --turn rotation on when in fate
 if IsInFate() then
   yield("/rotation auto")
-  yield("/wait 0.3")
+  yield("/wait 0.5")
 end
 
 --locates the mobs in the fate and path to them
 while IsInFate() do
-  while GetDistanceToTarget() > 3.5 do
+  if GetCharacterCondition(4) == true then
+    yield("/gaction dismount")
+    yield("/wait 2")
+    PathStop()
+  end
+while GetDistanceToTarget() > 3.5 do
     local enemy_x = GetTargetRawXPos()
     local enemy_y = GetTargetRawYPos()
     local enemy_z = GetTargetRawZPos()
+    if PathIsRunning() == false then 
     PathfindAndMoveTo(enemy_x, enemy_y, enemy_z)
+    end
     yield("/wait 0.1")
   end
     PathStop()
@@ -170,7 +177,7 @@ while IsInFate() do
 end
 
 --disables rs when out of fate 
-if IsInFate() == false then
+if IsInFate() == false and GetCharacterCondition(26) == false then
   yield("/rotation cancel")
   yield("/wait 1")
 end
@@ -186,5 +193,10 @@ while IsInFate() == false and GetCharacterCondition(4) == false do
      yield('/gaction "mount roulette"')
      yield("/rotation cancel")
      yield("/wait 5")
-     end
+    end
+
+if fateX == 0 and fateY == 0 and fateZ == 0 then
+      PathStop()
 end
+end
+
