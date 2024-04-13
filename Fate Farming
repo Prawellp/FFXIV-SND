@@ -6,8 +6,10 @@
 
   ***********
   * Version *
-  *  0.0.2  *
+  *  0.0.3  *
   ***********
+
+    -> 0.0.3: fixed some bugs with rs a and so
 
     -> 0.0.2: Filterd out fates u need to actiavte, 
               added a function that walks to the targetet enemy, 
@@ -29,7 +31,7 @@
   Plugins that are used are:
   -> VNavmesh (for pathing) AND Visland: https://puni.sh/api/repository/veyn
   -> Pandora : https://love.puni.sh/ment.json
-  -> RotationSolver : https://puni.sh/api/repository/croizat
+  -> RotationSolver Reborn : https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json
      -> Target -> activate "Select only Fate targets in Fate" and "Target Fate priority"
   -> Something Need Doing [Expanded Edition] : https://puni.sh/api/repository/croizat
 ]]
@@ -148,19 +150,23 @@ while IsInFate() and GetCharacterCondition(4) do
      yield("/wait 0.3")
      end
 
+--turn rotation on when in fate
+if IsInFate() then
+  yield("/rotation auto")
+  yield("/wait 0.3")
+end
+
 --locates the mobs in the fate and path to them
 while IsInFate() do
+  while GetDistanceToTarget() > 3.5 do
     local enemy_x = GetTargetRawXPos()
     local enemy_y = GetTargetRawYPos()
     local enemy_z = GetTargetRawZPos()
     PathfindAndMoveTo(enemy_x, enemy_y, enemy_z)
-     yield("/rotation auto")
-     yield("/wait 1")
-     end
-
---starts rs manual when ur getting attacked outside the fate (had some Issues that an non fate mob attacked and you couldnt mount and didn't attack)
-if IsInFate() == false and GetCharacterCondition(26) then 
-  yield("/rotation manual")
+    yield("/wait 0.1")
+  end
+    PathStop()
+    yield("/wait 1")
 end
 
 --disables rs when out of fate 
@@ -169,9 +175,16 @@ if IsInFate() == false then
   yield("/wait 1")
 end
 
+--starts rs auto when ur getting attacked outside the fate (had some Issues that an non fate mob attacked and you couldnt mount and didn't attack)
+if IsInFate() == false and GetCharacterCondition(26) then 
+  yield("/rotation auto")
+end
+
 --when fate done mount
 while IsInFate() == false and GetCharacterCondition(4) == false do
+     PathStop()
      yield('/gaction "mount roulette"')
-     yield("/wait 1")
+     yield("/rotation cancel")
+     yield("/wait 5")
      end
 end
