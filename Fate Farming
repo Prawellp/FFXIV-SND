@@ -6,9 +6,13 @@
 
   ***********
   * Version *
-  *  0.0.5  *
+  *  0.0.6  *
   ***********
 
+    -> 0.0.6: you will now dismount upon entering the fate (hopefully) instead pathing to the center
+              if you got to the spot where u "should" dismount but don't dismount, triggers a counter that will start and change the path to another location to prevent being stuck cause of some stones
+              Removed auto rs settings now need toset the engage setting in rs to Previously engaged targets (look at Required Plugins)
+              when no fate exists it won't go to 0.0.0 anymore and just stand still till a new fate spawn 
     -> 0.0.5: fixed stuff with rs and thanks to UcanPatates for refining the code a bit and fixing some stuff. and all the others that helpt on this version and gave their feedback
     -> 0.0.4: fixed more bugs or so...
     -> 0.0.3: fixed some bugs with rs a and so
@@ -19,8 +23,6 @@
               added a echo notification when ur Bicolor Gems are over 900
 
   Created by: Prawellp
-
-  Special Thanks to everyone who helped me!
 
   Known Issues: the Ping if your almost capped will keep spamming if there is no fate
                 it can happen if u switch zones after using it it won't work and u would need to relog
@@ -35,6 +37,7 @@
   -> Pandora : https://love.puni.sh/ment.json
   -> RotationSolver Reborn : https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json
      -> Target -> activate "Select only Fate targets in Fate" and "Target Fate priority"
+     -> Target -> "Engage settings" set to "Previously engaged targets (enagegd on countdown timer)"
   -> Something Need Doing [Expanded Edition] : https://puni.sh/api/repository/croizat
 ]]
 
@@ -55,7 +58,7 @@
   
   Announce = 2
   --change this value for how much echos u want in chat 
-  --2 is FateId and Bicolor gems amount
+  --2 is the fate your Moving to and Bicolor gems amount
   --1 is only Bicolor gems
   --0 is nothing
   --echos will appear after it found a new fate 
@@ -92,15 +95,8 @@
   yield('/gaction "mount roulette"')
   yield("/wait 1")
   end
-  
-  function RotationCancel()
-    if IsInFate() == false or GetCharacterCondition(26) == false then
-      yield("/rotation cancel")
-      yield("/wait 0.1")
-    end
-  end
-  
-  
+  yield("/rotation auto")
+
   --the actual code for the fates and loop
   while true do
   gems = GetItemCount(26807)
@@ -126,59 +122,94 @@
   
   
   --gets the fate location
-  fateX = GetFateLocationX(fateId)
+  fateX = GetFateLocationX(fateId)+25
   fateY = GetFateLocationY(fateId)+5
-  fateZ = GetFateLocationZ(fateId)
+  fateZ = GetFateLocationZ(fateId)+25
   LogInfo(fateX.." , "..fateY.." , "..fateZ)
   
   --paths to the fate
+  if fateX ~= 0 and fateY ~= 5 and fateZ ~= 0 then
   PathfindAndMoveTo(fateX, fateY, fateZ, true)
-  if fateX == 0 and fateY == 0 and fateZ == 0 then
+  if fateId ~= 0 and Announce == 2 then
+  yield("/echo Moving to Fate: "..fateId)
+  end
+  end
+
+  if fateX == 0 and fateY == 5 and fateZ == 0 then
+    noFate = true
+    yield("/echo No Fate existing")
     PathStop()
+    yield("/wait 2")
+  end
+
+if fateX ~= 0 and fateY ~= 5 and fateZ ~= 0 then
+   noFate = false 
+   yield("/wait 0.5")
   end
   
   --setting 1 for echo 
-  if fateId ~= 0 and Announce == 1 then
+  if fateId ~= 0 and Announce == 1 or Announce == 2 and noFate == false then
     yield("/e Gems: "..gems)
-  end
-  
-  --setting 2 for echo 
-  if fateId ~= 0 and Announce == 2 then
-    yield("/e FateId:"..fateId)
-    yield("/e Gems: "..gems)
+    yield("/wait 0.5")
   end
   
   --jumps when mount lands
-  while PathIsRunning() or PathfindInProgress() do
+  while PathIsRunning() or PathfindInProgress() and IsInFate() == false do
        if GetCharacterCondition(4) and GetCharacterCondition(77) == false then 
           yield("/gaction jump")
           yield("/wait 0.3")
        end
   end
-  
+
+  if noFate == true and PathIsRunning() or PathfindInProgress() then
+    PathStop()
+    yield("/vnavmesh stop")
+    yield("/wait 2")
+  end
+
+  dcount = 0
   --dismount when in fate
   while IsInFate() and GetCharacterCondition(4) do
     yield("/gaction dismount")
     yield("/wait 0.3")
+    dcount = dcount + 1
+    yield("/echo "..dcount)
+    if dcount == 5 then
+        fateX = GetFateLocationX(fateId)+10
+        fateY = GetFateLocationY(fateId)+5
+        fateZ = GetFateLocationZ(fateId)+10
+        PathfindAndMoveTo(fateX, fateY, fateZ, true)
+        yield("/wait 5")
+    end
+    if dcount == 10 then
+        fateX = GetFateLocationX(fateId)+20
+        fateY = GetFateLocationY(fateId)+5
+        fateZ = GetFateLocationZ(fateId)+20
+        PathfindAndMoveTo(fateX, fateY, fateZ, true)
+        yield("/wait 5")
+    end
+    if dcount == 20 then
+        fateX = GetFateLocationX(fateId)-20
+        fateY = GetFateLocationY(fateId)+10
+        fateZ = GetFateLocationZ(fateId)-20
+        PathfindAndMoveTo(fateX, fateY, fateZ)
+        yield("/wait 5")
+    end
+    yield("/wait 0.5")
+    PathStop()
+    yield("/vnavmesh stop")
   end
-  
-  --disables rs when out of fate
-      RotationCancel()
-  
-  --turn rotation on when in fate
-  if IsInFate() then
-    yield("/rotation auto")
-    yield("/wait 1")
-  end
+    if dcount > 20 and GetCharacterCondition(26) and GetCharacterCondition(4) == false then
+        PathStop()
+    end
   
   --locates the mobs in the fate and path to them
   while IsInFate() do
     if GetCharacterCondition(4) == true then
       yield("/gaction dismount")
       yield("/wait 2")
-      yield("/rotation auto")
-      yield("/wait 0.5")
       PathStop()
+      yield("/vnavmesh stop")
     end
   while GetDistanceToTarget() > 3.5 do
       local enemy_x = GetTargetRawXPos()
@@ -189,23 +220,18 @@
       end
       yield("/wait 0.1")
     end
-      PathStop()
+    PathStop()
+    yield("/vnavmesh stop")
       yield("/wait 1")
-  end
-  
-  --disables rs when out of fate 
-  RotationCancel()
-  
-  --starts rs auto when ur getting attacked outside the fate (had some Issues that an non fate mob attacked and you couldnt mount and didn't attack)
-  if IsInFate() == false and GetCharacterCondition(26) then 
-    yield("/rotation auto")
   end
 
   --when fate done mount
   while IsInFate() == false and GetCharacterCondition(4) == false do
        PathStop()
        yield('/gaction "mount roulette"')
-       yield("/rotation cancel")
        yield("/wait 5")
       end
+  if fateX == 0 and fateY == 5 and fateZ == 0 then
+    PathStop()
+  end
   end
