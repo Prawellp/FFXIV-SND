@@ -128,27 +128,27 @@
   LogInfo(fateX.." , "..fateY.." , "..fateZ)
   
   --paths to the fate
-  if fateX ~= 0 and fateY ~= 5 and fateZ ~= 0 then
+  if fateX ~= 25 and fateY ~= 5 and fateZ ~= 25 then
   PathfindAndMoveTo(fateX, fateY, fateZ, true)
   if fateId ~= 0 and Announce == 2 then
   yield("/echo Moving to Fate: "..fateId)
   end
   end
 
-  if fateX == 0 and fateY == 5 and fateZ == 0 then
+  if fateX == 25 and fateY == 5 and fateZ == 25 then
     noFate = true
     yield("/echo No Fate existing")
     PathStop()
     yield("/wait 2")
   end
 
-if fateX ~= 0 and fateY ~= 5 and fateZ ~= 0 then
+if fateX ~= 25 and fateY ~= 5 and fateZ ~= 25 then
    noFate = false 
    yield("/wait 0.5")
   end
   
   --setting 1 for echo 
-  if fateId ~= 0 and Announce == 1 or Announce == 2 and noFate == false then
+  if noFate == true  and fateId ~= 0 and Announce == 1 or Announce == 2 then
     yield("/e Gems: "..gems)
     yield("/wait 0.5")
   end
