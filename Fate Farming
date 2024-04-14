@@ -173,7 +173,6 @@ if fateX ~= 0 and fateY ~= 5 and fateZ ~= 0 then
     yield("/gaction dismount")
     yield("/wait 0.3")
     dcount = dcount + 1
-    yield("/echo "..dcount)
     if dcount == 5 then
         fateX = GetFateLocationX(fateId)+10
         fateY = GetFateLocationY(fateId)+5
