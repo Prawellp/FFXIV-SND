@@ -1,4 +1,4 @@
---[[
+  --[[
 
   ****************************************
   *            Fate Farming              * 
@@ -6,9 +6,14 @@
 
   ***********
   * Version *
-  *  0.0.6  *
+  *  0.0.7  *
   ***********
 
+    -> 0.0.7: made the code look Prettier
+              and fixed some stuff like you will go a bit higher then the fate and then dismount all the way hopefully preventing trying to fly into buildings
+              added functions to call them to make the loop code look smaller
+              hopefully fixed the problem that it spams in chat (if still happen please report)
+              should mount when there is no fate and u get in combat
     -> 0.0.6: you will now dismount upon entering the fate (hopefully) instead pathing to the center
               if you got to the spot where u "should" dismount but don't dismount, triggers a counter that will start and change the path to another location to prevent being stuck cause of some stones
               Removed auto rs settings now need toset the engage setting in rs to Previously engaged targets (look at Required Plugins)
@@ -16,11 +21,6 @@
     -> 0.0.5: fixed stuff with rs and thanks to UcanPatates for refining the code a bit and fixing some stuff. and all the others that helpt on this version and gave their feedback
     -> 0.0.4: fixed more bugs or so...
     -> 0.0.3: fixed some bugs with rs a and so
-    -> 0.0.2: Filterd out fates u need to actiavte, 
-              added a function that walks to the targetet enemy, 
-              added a function that auto turns on Pandora and RS stuff, 
-              added a function that checks if ur mounted or not and mounts you at the beginning (last version it tried to mount you even if you already where mounted)
-              added a echo notification when ur Bicolor Gems are over 900
 
   Created by: Prawellp
 
@@ -72,15 +72,14 @@
   
   ]]
   
-  --Chocobo settings
+----------------------------------Settings----------------------------------------------
   if ChocoboS == true then
   PandoraSetFeatureState("Auto-Summon Chocobo", true) 
   PandoraSetFeatureConfigState("Auto-Summon Chocobo", "Use whilst in combat", true)
   elseif ChocoboS == false then
     yield("/e Sad Chocobo noises...")
   end
-  
-  --Fate settings
+
   if FateS == true then
   PandoraSetFeatureState("Auto-Sync FATEs", true) 
   PandoraSetFeatureState("FATE Targeting Mode", true) 
@@ -88,20 +87,11 @@
   elseif FateS == false then
   yield("/e I hope u have something that syncs and targets them")
   end
-  
-  
-  --Mounts at the Beginning
-  if GetCharacterCondition(4) == false then
-  yield('/gaction "mount roulette"')
-  yield("/wait 1")
-  end
-  yield("/rotation auto")
+-------------------------------------------------------------------------------------
 
-  --the actual code for the fates and loop
-  while true do
-  gems = GetItemCount(26807)
-  
-  --gets the Closest Fate
+
+------------------------------functions----------------------------------------------
+  function FateLocation()
   fates = GetActiveFates()
   minDistance = 50000
   fateId = 0
@@ -114,46 +104,92 @@
       end
     end
   end
-  --ping when your over capped
-  if gems > 900 then
-    yield("/e You are Almost capped with ur Bicolor Gems! <se.3>")
-    yield("/wait 1")
-    end
-  
-  
-  --gets the fate location
-  fateX = GetFateLocationX(fateId)+25
-  fateY = GetFateLocationY(fateId)+5
-  fateZ = GetFateLocationZ(fateId)+25
+
+  fateX = GetFateLocationX(fateId)
+  fateY = GetFateLocationY(fateId)+18
+  fateZ = GetFateLocationZ(fateId)
   LogInfo(fateX.." , "..fateY.." , "..fateZ)
+
+  if fateX == 0 and fateY == 18 and fateZ == 0 then
+    noFate = true
+    yield("/vnavmesh stop")
+    PathStop()
+  end
   
-  --paths to the fate
-  if fateX ~= 25 and fateY ~= 5 and fateZ ~= 25 then
+  if fateX ~= 0 and fateY ~= 18 and fateZ ~= 0 then
+  noFate = false
   PathfindAndMoveTo(fateX, fateY, fateZ, true)
-  if fateId ~= 0 and Announce == 2 then
+  if Announce == 2 then
   yield("/echo Moving to Fate: "..fateId)
   end
   end
+end
 
-  if fateX == 25 and fateY == 5 and fateZ == 25 then
-    noFate = true
-    yield("/echo No Fate existing")
-    PathStop()
-    yield("/wait 2")
+
+function enemyPathing()
+while GetDistanceToTarget() > 3.5 do
+  local enemy_x = GetTargetRawXPos()
+  local enemy_y = GetTargetRawYPos()
+  local enemy_z = GetTargetRawZPos()
+  if PathIsRunning() == false then 
+  PathfindAndMoveTo(enemy_x, enemy_y, enemy_z)
+  end
+  yield("/wait 0.1")
+end
+end
+
+function noFateSafe()
+if noFate == true and fcount == 0 then
+  yield("/echo No Fate existing")
+  if GetCharacterCondition(26) then
+  Name = GetCharacterName()
+  PlocX = GetPlayerRawXPos(Name)
+  PlocY = GetPlayerRawYPos(Name)+40
+  PlocZ = GetPlayerRawZPos(Name)
+  yield("/gaction jump")
+  yield("/wait 0.5")
+  PathfindAndMoveTo(PlocX, PlocY, PlocZ, true)
+  PathStop()
+  yield("/wait 2")
+  end
+  fcount = fcount +1
+end
+end
+---------------------------Beginning of the Code------------------------------------
+if GetCharacterCondition(4) == false then
+  yield('/gaction "mount roulette"')
+  yield("/wait 3")
+  if GetCharacterCondition(4) == true then
+  yield("/gaction jump")
+  yield("/wait 2")
+end
+end
+yield("/rotation auto")
+
+--Start of the Code
+  while true do
+  gems = GetItemCount(26807)
+
+---------------------------Notification tab---------------------------------------
+gcount = 0
+fcount = 0
+  if gems > 900 then
+    yield("/e You are Almost capped with ur Bicolor Gems! <se.3>")
+    yield("/wait 1")
   end
 
-if fateX ~= 25 and fateY ~= 5 and fateZ ~= 25 then
-   noFate = false 
-   yield("/wait 0.5")
-  end
-  
-  --setting 1 for echo 
-  if noFate == true  and fateId ~= 0 and Announce == 1 or Announce == 2 then
+
+  if gcount == 0  and fateId ~= 0 and Announce == 1 or Announce == 2 then
     yield("/e Gems: "..gems)
     yield("/wait 0.5")
+    gcount = gcount +1
   end
-  
-  --jumps when mount lands
+---------------------------------------------------------------------------------
+
+FateLocation()
+noFateSafe()
+
+-------------------------------Mount---------------------------------------------
   while PathIsRunning() or PathfindInProgress() and IsInFate() == false do
        if GetCharacterCondition(4) and GetCharacterCondition(77) == false then 
           yield("/gaction jump")
@@ -167,70 +203,42 @@ if fateX ~= 25 and fateY ~= 5 and fateZ ~= 25 then
     yield("/wait 2")
   end
 
-  dcount = 0
-  --dismount when in fate
+
   while IsInFate() and GetCharacterCondition(4) do
     yield("/gaction dismount")
     yield("/wait 0.3")
-    dcount = dcount + 1
-    if dcount == 5 then
-        fateX = GetFateLocationX(fateId)+10
-        fateY = GetFateLocationY(fateId)+5
-        fateZ = GetFateLocationZ(fateId)+10
-        PathfindAndMoveTo(fateX, fateY, fateZ, true)
-        yield("/wait 5")
-    end
-    if dcount == 10 then
-        fateX = GetFateLocationX(fateId)+20
-        fateY = GetFateLocationY(fateId)+5
-        fateZ = GetFateLocationZ(fateId)+20
-        PathfindAndMoveTo(fateX, fateY, fateZ, true)
-        yield("/wait 5")
-    end
-    if dcount == 20 then
-        fateX = GetFateLocationX(fateId)-20
-        fateY = GetFateLocationY(fateId)+10
-        fateZ = GetFateLocationZ(fateId)-20
-        PathfindAndMoveTo(fateX, fateY, fateZ)
-        yield("/wait 5")
-    end
-    yield("/wait 0.5")
     PathStop()
     yield("/vnavmesh stop")
   end
-    if dcount > 20 and GetCharacterCondition(26) and GetCharacterCondition(4) == false then
-        PathStop()
-    end
-  
-  --locates the mobs in the fate and path to them
-  while IsInFate() do
+---------------------------------------------------------------------------------
+
+-------------------------------Fate----------------------------------------------
+while IsInFate() do
+    PathStop()
     if GetCharacterCondition(4) == true then
       yield("/gaction dismount")
       yield("/wait 2")
       PathStop()
       yield("/vnavmesh stop")
     end
-  while GetDistanceToTarget() > 3.5 do
-      local enemy_x = GetTargetRawXPos()
-      local enemy_y = GetTargetRawYPos()
-      local enemy_z = GetTargetRawZPos()
-      if PathIsRunning() == false then 
-      PathfindAndMoveTo(enemy_x, enemy_y, enemy_z)
-      end
-      yield("/wait 0.1")
-    end
+    enemyPathing()
     PathStop()
     yield("/vnavmesh stop")
-      yield("/wait 1")
+    yield("/wait 1")
+    fcount = 0
+    gcount = 0
   end
 
   --when fate done mount
   while IsInFate() == false and GetCharacterCondition(4) == false do
-       PathStop()
-       yield('/gaction "mount roulette"')
-       yield("/wait 5")
-      end
-  if fateX == 0 and fateY == 5 and fateZ == 0 then
     PathStop()
-  end
+    yield("/wait 3")
+    yield('/gaction "mount roulette"')
+    yield("/wait 3")
+    if GetCharacterCondition(4) == true then
+    yield("/gaction jump")
+    yield("/wait 2")
+    end
+   end
+  --------------------------------------------------------------------------------
   end
