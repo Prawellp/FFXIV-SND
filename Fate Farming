@@ -4,15 +4,22 @@
   *            Fate Farming              * 
   ****************************************
 
+  Created by: Prawellp
+
   ***********
   * Version *
-  *  0.0.7  *
+  *  0.0.8  *
   ***********
 
+    -> 0.0.8: added auto repair function
+              added new settings
+              fixed the bug with the chat spamming
+              made it now when the chocobo or fate settings are false that it will disable them in Pandora
+              sadly still didn't fix the bug that it paths into buildings and makes u stuck
     -> 0.0.7: made the code look Prettier
               and fixed some stuff like you will go a bit higher then the fate and then dismount all the way hopefully preventing trying to fly into buildings
               added functions to call them to make the loop code look smaller
-              hopefully fixed the problem that it spams in chat (if still happen please report)
+              hopefully fixed the problem that it spams in chat
               should mount when there is no fate and u get in combat
     -> 0.0.6: you will now dismount upon entering the fate (hopefully) instead pathing to the center
               if you got to the spot where u "should" dismount but don't dismount, triggers a counter that will start and change the path to another location to prevent being stuck cause of some stones
@@ -20,11 +27,8 @@
               when no fate exists it won't go to 0.0.0 anymore and just stand still till a new fate spawn 
     -> 0.0.5: fixed stuff with rs and thanks to UcanPatates for refining the code a bit and fixing some stuff. and all the others that helpt on this version and gave their feedback
     -> 0.0.4: fixed more bugs or so...
-    -> 0.0.3: fixed some bugs with rs a and so
 
-  Created by: Prawellp
-
-  Known Issues: the Ping if your almost capped will keep spamming if there is no fate
+  Known Issues: still can path into buildings and will make you stuck
                 it can happen if u switch zones after using it it won't work and u would need to relog
 
   *********************
@@ -48,50 +52,54 @@
   **************
   ]]
 
-  FateS = true
-  -- activates the Fate settings in Pandora
-  -- Auto-Sync fate and target fate mobs (kind of needed ig)
-  
-  ChocoboS = true
-  -- activates the Chocobo settings in Pandora
-  -- Auto-Summon Chocobo and call him in fight (there is not much time where you are on ground so it will need to use it mid fight)
-  
-  Announce = 2
-  --change this value for how much echos u want in chat 
-  --2 is the fate your Moving to and Bicolor gems amount
-  --1 is only Bicolor gems
-  --0 is nothing
-  --echos will appear after it found a new fate 
-  
-  --[[
-  
-    ************
-    *  Script  *
-    *   Start  *
-    ************
-  
-  ]]
-  
-----------------------------------Settings----------------------------------------------
-  if ChocoboS == true then
-  PandoraSetFeatureState("Auto-Summon Chocobo", true) 
-  PandoraSetFeatureConfigState("Auto-Summon Chocobo", "Use whilst in combat", true)
-  elseif ChocoboS == false then
-    yield("/e Sad Chocobo noises...")
-  end
+ManualRepair = true --true (yes)| false (no) --will repair your gear after every fate if the threshold is reached.
+RepairAmount = 99   -- the amount of Condition you gear will need before getting Repaired
 
-  if FateS == true then
-  PandoraSetFeatureState("Auto-Sync FATEs", true) 
-  PandoraSetFeatureState("FATE Targeting Mode", true) 
-  yield("/wait 1")
-  elseif FateS == false then
-  yield("/e I hope u have something that syncs and targets them")
-  end
+
+FateS = true --true (yes)| false (no)
+--Activates the Fate settings in Pandora "Auto-Sync FATEs" and "FATE Targeting Mode".
+
+ChocoboS = true --true (yes)| false (no)
+--Activates the Chocobo settings in Pandora "Auto-Summon Chocobo" and "Use whilst in combat".
+
+
+Announce = 2 
+--Change this value for how much echos u want in chat 
+--2 is the fate your Moving to and Bicolor gems amount
+--1 is only Bicolor gems
+--0 is nothing
+--echos will appear after it found a new fate 
+
+--[[
+
+************
+*  Script  *
+*   Start  *
+************
+
+]]
+
+----------------------------------Settings----------------------------------------------
+if ChocoboS == true then
+PandoraSetFeatureState("Auto-Summon Chocobo", true) 
+PandoraSetFeatureConfigState("Auto-Summon Chocobo", "Use whilst in combat", true)
+elseif ChocoboS == false then
+yield("/e Sad Chocobo noises...")
+PandoraSetFeatureState("Auto-Summon Chocobo", false) 
+PandoraSetFeatureConfigState("Auto-Summon Chocobo", "Use whilst in combat", false)
+end
+
+if FateS == true then
+PandoraSetFeatureState("Auto-Sync FATEs", true) 
+PandoraSetFeatureState("FATE Targeting Mode", true) 
+yield("/wait 1")
+elseif FateS == false then
+yield("/e I hope u have something that syncs and targets them")
+end
 -------------------------------------------------------------------------------------
 
-
 ------------------------------functions----------------------------------------------
-  function FateLocation()
+function FateLocation()
   fates = GetActiveFates()
   minDistance = 50000
   fateId = 0
@@ -106,21 +114,27 @@
   end
 
   fateX = GetFateLocationX(fateId)
-  fateY = GetFateLocationY(fateId)+18
+  fateY = GetFateLocationY(fateId)+5
   fateZ = GetFateLocationZ(fateId)
   LogInfo(fateX.." , "..fateY.." , "..fateZ)
 
-  if fateX == 0 and fateY == 18 and fateZ == 0 then
+  if fateX == 0 and fateY == 5 and fateZ == 0 then
     noFate = true
     yield("/vnavmesh stop")
     PathStop()
+    yield("/wait 2")
   end
-  
-  if fateX ~= 0 and fateY ~= 18 and fateZ ~= 0 then
+
+  if fateX ~= 0 and fateY ~= 5 and fateZ ~= 0 then
   noFate = false
   PathfindAndMoveTo(fateX, fateY, fateZ, true)
   if Announce == 2 then
-  yield("/echo Moving to Fate: "..fateId)
+  yield("/echo Moving to Fate: "..fateId)  
+  end
+  if gcount == 0  and fateId ~= 0 and Announce == 1 or Announce == 2 then
+    yield("/e Gems: "..gems)
+    yield("/wait 0.5")
+    gcount = gcount +1
   end
   end
 end
@@ -139,8 +153,11 @@ end
 end
 
 function noFateSafe()
-if noFate == true and fcount == 0 then
+if noFate == true then
+  if fcount == 0 then
   yield("/echo No Fate existing")
+  fcount = fcount +1
+  end
   if GetCharacterCondition(26) then
   Name = GetCharacterName()
   PlocX = GetPlayerRawXPos(Name)
@@ -152,10 +169,14 @@ if noFate == true and fcount == 0 then
   PathStop()
   yield("/wait 2")
   end
-  fcount = fcount +1
 end
 end
 ---------------------------Beginning of the Code------------------------------------
+gcount = 0
+cCount = 0
+fcount = 0
+
+--will mount if not mounted on start
 if GetCharacterCondition(4) == false then
   yield('/gaction "mount roulette"')
   yield("/wait 3")
@@ -171,18 +192,10 @@ yield("/rotation auto")
   gems = GetItemCount(26807)
 
 ---------------------------Notification tab---------------------------------------
-gcount = 0
-fcount = 0
-  if gems > 900 then
+  if gems > 900 and cCount == 0 then
     yield("/e You are Almost capped with ur Bicolor Gems! <se.3>")
     yield("/wait 1")
-  end
-
-
-  if gcount == 0  and fateId ~= 0 and Announce == 1 or Announce == 2 then
-    yield("/e Gems: "..gems)
-    yield("/wait 0.5")
-    gcount = gcount +1
+    cCount = cCount +1
   end
 ---------------------------------------------------------------------------------
 
@@ -190,20 +203,20 @@ FateLocation()
 noFateSafe()
 
 -------------------------------Mount---------------------------------------------
+--jump when landing while pathing to fate
   while PathIsRunning() or PathfindInProgress() and IsInFate() == false do
        if GetCharacterCondition(4) and GetCharacterCondition(77) == false then 
           yield("/gaction jump")
           yield("/wait 0.3")
        end
   end
-
+--path stop when no fate 
   if noFate == true and PathIsRunning() or PathfindInProgress() then
     PathStop()
     yield("/vnavmesh stop")
     yield("/wait 2")
   end
-
-
+--dismounting when in fate
   while IsInFate() and GetCharacterCondition(4) do
     yield("/gaction dismount")
     yield("/wait 0.3")
@@ -213,6 +226,7 @@ noFateSafe()
 ---------------------------------------------------------------------------------
 
 -------------------------------Fate----------------------------------------------
+--dismounts when in fate and paths to the enemys
 while IsInFate() do
     PathStop()
     if GetCharacterCondition(4) == true then
@@ -227,8 +241,31 @@ while IsInFate() do
     yield("/wait 1")
     fcount = 0
     gcount = 0
+    cCount = 0
   end
+---------------------------------------------------------------------------------
 
+-----------------------------After Fate------------------------------------------
+--Repair function
+  if ManualRepair == true then
+    if NeedsRepair(RepairAmount) then
+      while not IsAddonVisible("Repair") do
+        yield("/generalaction repair")
+        yield("/wait 0.5")
+      end
+      yield("/pcall Repair true 0")
+      yield("/wait 0.1")
+      if IsAddonVisible("SelectYesno") then
+        yield("/pcall SelectYesno true 0")
+        yield("/wait 0.1")
+      end
+      while GetCharacterCondition(39) do 
+        yield("/wait 1") 
+      end
+      yield("/wait 1")
+      yield("/pcall Repair true -1")
+    end
+  end
   --when fate done mount
   while IsInFate() == false and GetCharacterCondition(4) == false do
     PathStop()
