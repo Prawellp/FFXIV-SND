@@ -29,6 +29,7 @@
     -> 0.0.4: fixed more bugs or so...
 
   Known Issues: still can path into buildings and will make you stuck
+                still paths to the fate when its done while pathing
                 it can happen if u switch zones after using it it won't work and u would need to relog
 
   *********************
