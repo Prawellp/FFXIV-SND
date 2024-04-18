@@ -8,9 +8,13 @@
 
   ***********
   * Version *
-  *  0.0.8  *
+  *  0.0.9  *
   ***********
 
+    -> 0.0.9: added now an shop exchange function that will teleport to the shop and exchange ur gems for Bicolor Vouchers
+              you will need to have every fate in Endwalker completet for it to work
+              added new settings to the feature and new Plugin Requirments
+              made it that it will dismount when arriving in the fate and hopefully when u target an fate enemy path to it to prevent getting stuck in some buildings
     -> 0.0.8: added auto repair function
               added new settings
               fixed the bug with the chat spamming
@@ -26,10 +30,8 @@
               Removed auto rs settings now need toset the engage setting in rs to Previously engaged targets (look at Required Plugins)
               when no fate exists it won't go to 0.0.0 anymore and just stand still till a new fate spawn 
     -> 0.0.5: fixed stuff with rs and thanks to UcanPatates for refining the code a bit and fixing some stuff. and all the others that helpt on this version and gave their feedback
-    -> 0.0.4: fixed more bugs or so...
 
-  Known Issues: still can path into buildings and will make you stuck
-                still paths to the fate when its done while pathing
+  Known Issues: still paths to the fate when its done while pathing
                 it can happen if u switch zones after using it it won't work and u would need to relog
 
   *********************
@@ -44,6 +46,7 @@
      -> Target -> activate "Select only Fate targets in Fate" and "Target Fate priority"
      -> Target -> "Engage settings" set to "Previously engaged targets (enagegd on countdown timer)"
   -> Something Need Doing [Expanded Edition] : https://puni.sh/api/repository/croizat
+  -> Teleporter
 ]]
 
 --[[
@@ -52,6 +55,9 @@
   *  Settings  *
   **************
   ]]
+
+teleport = "Yedlihmad" --Enter the name of the Teleporter where u farm Fates so it teleport back to the area and keeps farming
+Exchange = false --true (yes)| false (no) if it should exchange ur gems to Bicolor Gemstone Voucher
 
 ManualRepair = true --true (yes)| false (no) --will repair your gear after every fate if the threshold is reached.
 RepairAmount = 99   -- the amount of Condition you gear will need before getting Repaired
@@ -205,12 +211,16 @@ noFateSafe()
 
 -------------------------------Mount---------------------------------------------
 --jump when landing while pathing to fate
-  while PathIsRunning() or PathfindInProgress() and IsInFate() == false do
-       if GetCharacterCondition(4) and GetCharacterCondition(77) == false then 
-          yield("/gaction jump")
-          yield("/wait 0.3")
-       end
+while PathIsRunning() or PathfindInProgress() and IsInFate() == false do
+  if GetCharacterCondition(4) and GetCharacterCondition(77) == false then 
+    yield("/gaction jump")
+    yield("/wait 0.3")
   end
+  if PathIsRunning() and IsInFate() == true then
+    yield("/vnavmesh stop")
+    yield("/wait 0.5")
+   end
+end
 --path stop when no fate 
   if noFate == true and PathIsRunning() or PathfindInProgress() then
     PathStop()
@@ -229,8 +239,9 @@ noFateSafe()
 -------------------------------Fate----------------------------------------------
 --dismounts when in fate and paths to the enemys
 while IsInFate() do
-    PathStop()
+    yield("/vnavmesh stop")
     if GetCharacterCondition(4) == true then
+      yield("/vnavmesh stop")
       yield("/gaction dismount")
       yield("/wait 2")
       PathStop()
@@ -267,6 +278,41 @@ while IsInFate() do
       yield("/pcall Repair true -1")
     end
   end
+------------------------------Teleport-----------------------------------------------
+if gems > 900 and Exchange == true then
+    yield("/tp Old Sharlayan")
+    yield("/wait 6")
+  while GetCharacterCondition(45) == true do
+    yield("/wait 0.5")
+  end
+  if IsInZone(962) then
+    while PathIsRunning() == false or PathfindInProgress() == false do
+      PathfindAndMoveTo(72.497, 5.1499, -33.533)
+    end
+    yield("/wait 2")
+    while GetCharacterCondition(31) == false do
+      yield("/target Gadfrid")
+      yield("/wait 1")
+      yield("/interact")
+      yield("/click talk")
+      yield("/wait 1")
+    end
+    if GetCharacterCondition(31) == true then
+      yield("/pcall ShopExchangeCurrency false 0 5 9") --Change the last number "9" to the amount u want to buy 
+      yield("/wait 1")
+      yield("/pcall SelectYesno true 0")
+      yield("/wait 1")
+      yield("/pcall ShopExchangeCurrency true -1")
+      yield("/wait 1")
+      yield("/tp "..teleport)
+      yield("/wait 6")
+    while GetCharacterCondition(45) do
+      yield("/wait 1")
+    end
+end
+end
+end
+---------------------------------------------------------------------------------
   --when fate done mount
   while IsInFate() == false and GetCharacterCondition(4) == false do
     PathStop()
@@ -278,5 +324,5 @@ while IsInFate() do
     yield("/wait 2")
     end
    end
-  --------------------------------------------------------------------------------
-  end
+--------------------------------------------------------------------------------
+end
