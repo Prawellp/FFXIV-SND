@@ -11,7 +11,7 @@
   A Basic script that changes ur Graphic settings by one click after configurations
   usefull for Mutli client users who want diffrent graphics for each client
   you can put the script in a macro to toggle it with one click just use /pcraft run SND_SCRIPT_NAME_HERE
-  (it wont revert back so u would need a second one if you want the old graphics back)
+  (it wont revert back so u would need a second one if you want the old graphics back!)
 
   **************
   *  Settings  *
