@@ -8,9 +8,10 @@
 
   ***********
   * Version *
-  *  0.1.0  *
+  *  0.1.1  *
   ***********
 
+    -> 0.1.0:  Fixed Instance travel
     -> 0.1.0:  made it stop going to Fates that are done (i think)
                switches Instance in the new DT areas
     -> 0.0.9: added now an shop exchange function that will teleport to the shop and exchange ur gems for Bicolor Vouchers
@@ -27,10 +28,6 @@
               added functions to call them to make the loop code look smaller
               hopefully fixed the problem that it spams in chat
               should mount when there is no fate and u get in combat
-    -> 0.0.6: you will now dismount upon entering the fate (hopefully) instead pathing to the center
-              if you got to the spot where u "should" dismount but don't dismount, triggers a counter that will start and change the path to another location to prevent being stuck cause of some stones
-              Removed auto rs settings now need toset the engage setting in rs to Previously engaged targets (look at Required Plugins)
-              when no fate exists it won't go to 0.0.0 anymore and just stand still till a new fate spawn 
 
   Known Issues: still paths to the fate when its done while pathing
                 it can happen if u switch zones after using it it won't work and u would need to relog
@@ -197,17 +194,16 @@ end
     yield("/wait 6")
     end
 
-
     while GetCharacterCondition(45) do
     yield("/wait 1")
     end
-    yield("/target Aetheryte")
+    yield("/wait 2")
+    yield("/targetnpc")
     yield("/wait 0.5")
     yield("/lockon")
     yield("/wait 0.5")
     yield("/automove")
-    yield("/wait 0.5")
-    yield("/wait 0.5")
+    yield("/wait 1")
     yield("/li 1")
     yield("/wait 2")
     if GetCharacterCondition(45) == false then
