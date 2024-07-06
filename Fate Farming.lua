@@ -11,7 +11,8 @@
   *  0.1.1  *
   ***********
 
-    -> 0.1.0:  Fixed Instance travel
+    -> 0.1.1:  Fixed Instance travel
+               new Plugin Requirment for instance travel
     -> 0.1.0:  made it stop going to Fates that are done (i think)
                switches Instance in the new DT areas
     -> 0.0.9: added now an shop exchange function that will teleport to the shop and exchange ur gems for Bicolor Vouchers
@@ -45,6 +46,7 @@
      -> Target -> "Engage settings" set to "Previously engaged targets (enagegd on countdown timer)"
   -> Something Need Doing [Expanded Edition] : https://puni.sh/api/repository/croizat
   -> Teleporter
+  -> Lifestream : https://raw.githubusercontent.com/NightmareXIV/MyDalamudPlugins/main/pluginmaster.json
 ]]
 
 --[[
