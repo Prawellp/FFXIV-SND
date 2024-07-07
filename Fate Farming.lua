@@ -8,9 +8,11 @@
 
   ***********
   * Version *
-  *  0.1.3  *
+  *  0.1.4  *
   ***********
 
+    -> 0.1.4:   added non-flight support
+                will wait for Mesh to be ready before starting now
     -> 0.1.3:   added Bossmod AI feature for dodging and following target (look in Optional Plugins for settings) this is still experimental so it can bug a bit
                 Blacklistet some Fates in the Second Area of DT
                 Removed Fate settings because they are important. and no need settings for that
@@ -25,10 +27,6 @@
                 new Plugin Requirment for instance travel
     -> 0.1.0:   made it stop going to Fates that are done
                 switches Instance in the new DT areas
-    -> 0.0.9:   added now an shop exchange function that will teleport to the shop and exchange ur gems for Bicolor Vouchers
-                you will need to have every fate in Endwalker completet for it to work
-                added new settings to the feature and new Plugin Requirments
-                made it that it will dismount when arriving in the fate and hopefully when u target an fate enemy path to it to prevent getting stuck in some buildings
 
 
 *********************
@@ -144,7 +142,11 @@ end
 --Announcement for FateId
 if fateX ~= 0 and fateY ~= 5 and fateZ ~= 0 then
     noFate = false
+    if HasFlightUnlocked(zoneid) then
     PathfindAndMoveTo(fateX, fateY, fateZ, true)
+    else
+    PathfindAndMoveTo(fateX, fateY, fateZ)
+    end
     if Announce == 2 then
         yield("/echo Moving to Fate: "..fateId)  
 --Warning for Dangerous Fates
@@ -278,12 +280,16 @@ end
 gcount = 0
 cCount = 0
 fcount = 0
-  
+zoneid = GetZoneID()
+if NavIsReady() == false then
+yield("/echo Building Mesh Please wait...")
+end
+
 --will mount if not mounted on start
 if GetCharacterCondition(4) == false then
     yield('/gaction "mount roulette"')
     yield("/wait 3")
-    if GetCharacterCondition(4) == true then
+    if GetCharacterCondition(4) == true and HasFlightUnlocked(zoneid) then
     yield("/gaction jump")
     yield("/wait 2")
     end
@@ -291,6 +297,12 @@ if GetCharacterCondition(4) == false then
     yield("/rotation auto")
   
 --Start of the Code
+while NavIsReady() == false do
+yield("/wait 1")
+end
+if NavIsReady() then
+yield("/echo Mesh is Ready!")
+end
 while true do
 gems = GetItemCount(26807)
   
@@ -312,7 +324,7 @@ Fate1 = fateId
 --jump when landing while pathing to fate
 while PathIsRunning() or PathfindInProgress() and IsInFate() == false do
     InstanceCount = 0
-    if GetCharacterCondition(4) and GetCharacterCondition(77) == false then 
+    if GetCharacterCondition(4) and GetCharacterCondition(77) == false and HasFlightUnlocked(zoneid) then 
         yield("/gaction jump")
         yield("/wait 0.3")
     end
