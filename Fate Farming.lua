@@ -8,9 +8,14 @@
 
   ***********
   * Version *
-  *  0.1.2  *
+  *  0.1.3  *
   ***********
 
+    -> 0.1.3:   added Bossmod AI feature for dodging and following target (look in Optional Plugins for settings) this is still experimental so it can bug a bit
+                Blacklistet some Fates in the Second Area of DT
+                Removed Fate settings because they are important. and no need settings for that
+                added the section Optional Plugins for stuff like Instance travel, Materia extraction and Bossmod
+                Fixed the voucher exchange (but still the old Voucher!!!)
     -> 0.1.2:   added Materia Extraction (and new Plugin Requirment for it)
                 new settings added for the Instance changing (only supports Instance 1 and 2 for now)
                 Fixed Instance travel (make sure to interact with the aethryte first so its ready)
@@ -18,43 +23,39 @@
                 added a setting for the Warning if you don't care
     -> 0.1.1:   Fixed Instance travel
                 new Plugin Requirment for instance travel
-    -> 0.1.0:   made it stop going to Fates that are done (i think)
+    -> 0.1.0:   made it stop going to Fates that are done
                 switches Instance in the new DT areas
     -> 0.0.9:   added now an shop exchange function that will teleport to the shop and exchange ur gems for Bicolor Vouchers
                 you will need to have every fate in Endwalker completet for it to work
                 added new settings to the feature and new Plugin Requirments
                 made it that it will dismount when arriving in the fate and hopefully when u target an fate enemy path to it to prevent getting stuck in some buildings
-    -> 0.0.8:   added auto repair function
-                added new settings
-                fixed the bug with the chat spamming
-                made it now when the chocobo or fate settings are false that it will disable them in Pandora
-                sadly still didn't fix the bug that it paths into buildings and makes u stuck
-    -> 0.0.7:   made the code look Prettier
-                and fixed some stuff like you will go a bit higher then the fate and then dismount all the way hopefully preventing trying to fly into buildings
-                added functions to call them to make the loop code look smaller
-                hopefully fixed the problem that it spams in chat
-                should mount when there is no fate and u get in combat
 
-    Known Issues: No Blacklisting for Fates
-
-    Note: Im not sure if it loops the instance travel i tried to make it only do it 4 times and then stop but i couldn't test it so if there are any issues please Report thanks!
 
 *********************
 *  Required Plugins *
 *********************
 
+Plugins that are needed for it to work:
 
-Plugins that are used are:
     -> VNavmesh :   (for Pathing/Moving)  https://puni.sh/api/repository/veyn       
     -> Pandora :    (for Fate targeting and auto sync) https://love.puni.sh/ment.json             
     -> RotationSolver Reborn :  (for Attacking enemys)  https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json       
         -> Target -> activate "Select only Fate targets in Fate" and "Target Fate priority"
         -> Target -> "Engage settings" set to "Previously engaged targets (enagegd on countdown timer)"
     -> Something Need Doing [Expanded Edition] : (Main Plugin for everything to work)   https://puni.sh/api/repository/croizat       
+
+*********************
+*  Optional Plugins *
+*********************
+
+This Plugins are Optional and not needed unless you have it enabled in the settings:
+
     -> Teleporter :  (for Teleporting to aethrytes)
     -> Lifestream :  (for chaning Instances) https://raw.githubusercontent.com/NightmareXIV/MyDalamudPlugins/main/pluginmaster.json
     -> Yes Already : (for Materia Extraction) https://love.puni.sh/ment.json
         -> Bothers -> MaterializeDialog
+    -> Bossmod Reborn : (for AI dodging) https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json
+        -> AI Settings -> enable "Follow during combat" and "Follow out of combat"
 ]]
 --[[
 
@@ -69,13 +70,12 @@ Exchange = false --true (yes)| false (no) if it should exchange ur gems to Bicol
 ChangeInstance = true --true (yes)| false (no) if there is no Fate it will change the instance (only works in DT areas!)
 
 ManualRepair = true --true (yes)| false (no) --will repair your gear after every fate if the threshold is reached.
-RepairAmount = 99   -- the amount of Condition you gear will need before getting Repaired
+RepairAmount = 20   -- the amount of Condition you gear will need before getting Repaired
 ExtractMateria = true --true (yes)| false (no) --will Extract Materia if you can
-  
 
-FateS = true --true (yes)| false (no)   --Activates the Fate settings in Pandora "Auto-Sync FATEs" and "FATE Targeting Mode".
+BMR = false --true (yes)| false (no)    --will activate bossmod AI for dodging
 ChocoboS = true --true (yes)| false (no)    --Activates the Chocobo settings in Pandora "Auto-Summon Chocobo" and "Use whilst in combat".
-  
+
 FateWarning = true --true (yes)| false (no) --echos a warning in chat with sound from Known Dangerous Fates
 Announce = 2
 --Change this value for how much echos u want in chat 
@@ -102,14 +102,11 @@ elseif ChocoboS == false then
     PandoraSetFeatureState("Auto-Summon Chocobo", false) 
     PandoraSetFeatureConfigState("Auto-Summon Chocobo", "Use whilst in combat", false)
 end
-  
-if FateS == true then
-    PandoraSetFeatureState("Auto-Sync FATEs", true) 
-    PandoraSetFeatureState("FATE Targeting Mode", true) 
-yield("/wait 1")
-elseif FateS == false then
-yield("/e I hope u have something that syncs and targets them")
- end
+
+PandoraSetFeatureState("Auto-Sync FATEs", true) 
+PandoraSetFeatureState("FATE Targeting Mode", true) 
+yield("/wait 0.5")
+
 -------------------------------------------------------------------------------------
   
 ------------------------------functions----------------------------------------------
@@ -119,7 +116,8 @@ function FateLocation()
     minDistance = 50000
     fateId = 0
     for i = 0, fates.Count-1 do
-    if GetFateDuration(fates[i]) > 0 then
+    tempfate = fates[i]
+    if GetFateDuration(fates[i]) > 0 and tempfate ~= 1931 and tempfate ~= 1937 and tempfate ~= 1938 and tempfate ~= 1936 then --(Blacklist (still need to find away to make it better))
         distance = GetDistanceToPoint(GetFateLocationX(fates[i]), GetFateLocationY(fates[i]), GetFateLocationZ(fates[i]))
     if distance < minDistance then
         minDistance = distance
@@ -353,6 +351,7 @@ end
   
 -------------------------------Fate----------------------------------------------
 --dismounts when in fate and paths to the enemys
+bmaiactive = false
 while IsInFate() do
     yield("/vnavmesh stop")
     if GetCharacterCondition(4) == true then
@@ -362,16 +361,33 @@ while IsInFate() do
         PathStop()
         yield("/vnavmesh stop")
     end
+if GetCharacterCondition(4) == false and bmaiactive == false then 
+    if BMR == true then
+        yield("/bmrai on")
+        yield("/bmrai followtarget on")
+        bmaiactive = true
+    end
+end
+    if BMR == false then 
     enemyPathing()
+    end
     PathStop()
     yield("/vnavmesh stop")
     yield("/wait 1")
     fcount = 0
     gcount = 0
     cCount = 0
+
+end
+if IsInFate() == false and bmaiactive == true then 
+    if BMR == true then
+        yield("/bmrai off")
+        yield("/bmrai followtarget off")
+        bmaiactive = false
+    end
 end
 ---------------------------------------------------------------------------------
-  
+
 -----------------------------After Fate------------------------------------------
 --Repair function
 if ManualRepair == true then
@@ -427,11 +443,11 @@ while GetCharacterCondition(31) == false do
     yield("/target Gadfrid")
     yield("/wait 1")
     yield("/interact")
-    yield("/click talk")
+    yield("/click Talk_Click")
     yield("/wait 1")
 end
 if GetCharacterCondition(31) == true then
-    yield("/pcall ShopExchangeCurrency false 0 5 9") --Change the last number "9" to the amount u want to buy 
+    yield("/pcall ShopExchangeCurrency false 0 5 13") --Change the last number "13" to the amount u want to buy 
     yield("/wait 1")
     yield("/pcall SelectYesno true 0")
     yield("/wait 1")
