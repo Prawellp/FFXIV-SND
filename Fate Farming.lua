@@ -8,9 +8,22 @@
 
   ***********
   * Version *
-  *  0.1.5  *
+  *  0.1.6  *
   ***********
 
+    -> 0.1.6:   added new Vouchers
+                    ->new settings if you want to buy the old ones or new ones
+                    ->will use the aetheryte so make sure to have Lifestream
+                fixed Instance travel
+                    ->shouldn't stop the script anymore (i hope)
+                    ->added instance 3 and 4 for travelling
+                    ->it will no longer teleport for instance travel after Teleporting one time until you entert a fate again
+                fixed Retainers
+                added the 2 Boss fates to the Blacklist and some more
+                added a chat Warning when the Required/Optional Plugins aren't enabled if they are required (enabled in settings) only works on 3pp Plugins
+                Removed Fatewarning (not enough fates for it)
+                made the Description in Settings more clear (hopefully)
+                in Required/Optional Plugins there will be a new field in the "()" that will be "[]" to show for what settings you need for it
     -> 0.1.5:   added AutoRetainer support
                     ->new settings for it
                     ->new Optional Plugin requirments for it
@@ -27,8 +40,8 @@
                 Fixed Instance travel (make sure to interact with the aethryte first so its ready)
                 added a warning in chat if the Fate is Dangerous (for now its only 2, this are fates i did and almost died as a WAR (level 94) so be aware if you're another class and may be around that level)
                 added a setting for the Warning if you don't care
-    -> 0.1.1:   Fixed Instance travel
-                new Plugin Requirment for instance travel
+
+    Known Issues: "Cannot execute at this time." will appear sometimes in the chat you can just Ignore that.
 
 *********************
 *  Required Plugins *
@@ -36,12 +49,14 @@
 
 Plugins that are needed for it to work:
 
-    -> VNavmesh :   (for Pathing/Moving)  https://puni.sh/api/repository/veyn       
-    -> Pandora :    (for Fate targeting and auto sync) https://love.puni.sh/ment.json             
+    -> Something Need Doing [Expanded Edition] : (Main Plugin for everything to work)   https://puni.sh/api/repository/croizat   
+    -> VNavmesh :   (for Pathing/Moving)    https://puni.sh/api/repository/veyn       
+    -> Pandora :    (for Fate targeting and auto sync [ChocoboS])   https://love.puni.sh/ment.json             
+
     -> RotationSolver Reborn :  (for Attacking enemys)  https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json       
         -> Target -> activate "Select only Fate targets in Fate" and "Target Fate priority"
         -> Target -> "Engage settings" set to "Previously engaged targets (enagegd on countdown timer)"
-    -> Something Need Doing [Expanded Edition] : (Main Plugin for everything to work)   https://puni.sh/api/repository/croizat       
+    
 
 *********************
 *  Optional Plugins *
@@ -49,14 +64,17 @@ Plugins that are needed for it to work:
 
 This Plugins are Optional and not needed unless you have it enabled in the settings:
 
-    -> Teleporter :  (for Teleporting to aethrytes)
-    -> Lifestream :  (for chaning Instances) https://raw.githubusercontent.com/NightmareXIV/MyDalamudPlugins/main/pluginmaster.json
-    -> Yes Already : (for Materia Extraction) https://love.puni.sh/ment.json
+    -> Teleporter :  (for Teleporting to aetherytes [teleport][Exchange][Retainers])
+    -> Lifestream :  (for chaning Instances [ChangeInstance][Exchange]) https://raw.githubusercontent.com/NightmareXIV/MyDalamudPlugins/main/pluginmaster.json
+    -> AutoRetainer : (for Retainers [Retainers])   https://love.puni.sh/ment.json
+
+    -> Yes Already : (for Materia Extraction [ExtractMateria])  https://love.puni.sh/ment.json
         -> Bothers -> MaterializeDialog
-    -> Bossmod Reborn : (for AI dodging) https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json
+
+    -> Bossmod Reborn : (for AI dodging [BMR])  https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json
         -> AI Settings -> enable "Follow during combat" and "Follow out of combat"
-    -> AutoRetainer : (for Retainers) https://love.puni.sh/ment.json
-        -> Make sure to have all Retainers enabled
+
+
 ]]
 --[[
 
@@ -65,20 +83,22 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 **************
 ]]
 
---Be aware it still buys the old Vouchers!!!
-teleport = "Wachunpelo" --Enter the name of the Teleporter where u farm Fates so it teleport back to the area and keeps farming
-Exchange = false --true (yes)| false (no) if it should exchange ur gems to Bicolor Gemstone Voucher
-ChangeInstance = true --true (yes)| false (no) if there is no Fate it will change the instance (only works in DT areas!)
-Retainers = false --true (yes)| false (no) will process Retainers if enabled (don't forget to set the teleport so it teleports back to the area)
+--true = yes
+--false = no
 
-ManualRepair = true --true (yes)| false (no) --will repair your gear after every fate if the threshold is reached.
-RepairAmount = 20   -- the amount of Condition you gear will need before getting Repaired
-ExtractMateria = true --true (yes)| false (no) --will Extract Materia if you can
+teleport = "Leynode mnemo" --Enter the name of the Teleporter where youu farm Fates so it teleport back to the area and keeps farming
+Exchange = false            --should it Exchange Vouchers
+OldV = false               --should it Exchange Old Vouchers
+ChangeInstance = true      --should it Change Instance when there is no Fate (only works on DT fates)
+Retainers = false           --should it do Retainers
 
-BMR = false --true (yes)| false (no)    --will activate bossmod AI for dodging
-ChocoboS = true --true (yes)| false (no)    --Activates the Chocobo settings in Pandora "Auto-Summon Chocobo" and "Use whilst in combat".
+ManualRepair = true        --Should it Repair your gear if it falls Below the Repair Amount?
+RepairAmount = 20          --the amount it need to drop before Repairing
+ExtractMateria = true      --should it Extract Materia
 
-FateWarning = true --true (yes)| false (no) --echos a warning in chat with sound from Known Dangerous Fates
+BMR = false                 --if you want to use the BossMod dodge/follow mode
+ChocoboS = true            --should it Activate the Chocobo settings in Pandora (to summon it)
+
 Announce = 2
 --Change this value for how much echos u want in chat 
 --2 is the fate your Moving to and Bicolor gems amount
@@ -107,16 +127,50 @@ end
 
 PandoraSetFeatureState("Auto-Sync FATEs", true) 
 PandoraSetFeatureState("FATE Targeting Mode", true) 
-yield("/wait 0.5")
+yield("/wait 0.501")
+
+--Required Plugin Warning
+if HasPlugin("vnavmesh") == false then
+    yield("/echo Please Install vnavmesh")
+end
+if HasPlugin("RotationSolverReborn") == false and HasPlugin("RotationSolver") == false then
+    yield("/echo Please Install Rotation Solver Reborn")
+end
+if HasPlugin("PandorasBox") == false then
+    yield("/echo Please Install Pandora'sBox")
+end
+--Optional Plugin Warning
+if ChangeInstance == true  then
+if HasPlugin("Lifestream") == false then
+    yield("/echo Please Install Lifestream")
+end
+end
+if Retainers == true then
+if HasPlugin("AutoRetainer") == false then
+    yield("/echo Please Install AutoRetainer")
+end
+end
+if ExtractMateria == true then
+if HasPlugin("YesAlready") == false then
+    yield("/echo Please Install YesAlready")
+end 
+end   
+if BMR == true then
+if HasPlugin("BossModReborn") == false and HasPlugin("BossMod") == false then
+    yield("/echo Please Install BossMod Reborn")
+end
+end 
+
 ------------------------------Functions----------------------------------------------
 --Gets the Location fo the Fate
 function FateLocation()
+    if GetCharacterCondition(45) == false then
     fates = GetActiveFates()
     minDistance = 50000
     fateId = 0
     for i = 0, fates.Count-1 do
     tempfate = fates[i]
-    if GetFateDuration(fates[i]) > 0 and tempfate ~= 1931 and tempfate ~= 1937 and tempfate ~= 1936 then --(Blacklist (still need to find away to make it better))
+    if GetFateDuration(fates[i]) > 0 and tempfate ~= 1931 and tempfate ~= 1937 and tempfate ~= 1936 and tempfate ~= 1906 and tempfate ~= 1869 and tempfate ~= 1865 and tempfate ~= 1922 and tempfate ~= 1871 and tempfate ~= 1949 and tempfate ~= 1957 and tempfate ~= 1913 and tempfate ~= 1917 then --(Blacklist (still need to find away to make it better))
         distance = GetDistanceToPoint(GetFateLocationX(fates[i]), GetFateLocationY(fates[i]), GetFateLocationZ(fates[i]))
     if distance < minDistance then
         minDistance = distance
@@ -130,46 +184,46 @@ fateX = GetFateLocationX(fateId)
 fateY = GetFateLocationY(fateId)+5
 fateZ = GetFateLocationZ(fateId)
 LogInfo(fateX.." , "..fateY.." , "..fateZ)
+yield("/wait 1")
+end
 end
 
 --Paths to the Fate
 function FatePath()
-while IsInFate() == false and GetCharacterCondition(4) == false do
-    yield("/wait 3")
-    yield('/gaction "mount roulette"')
-    yield("/wait 3")
-if GetCharacterCondition(4) == true then
-    yield("/gaction jump")
-    yield("/wait 2")
-end
-end
 if fateX == 0 and fateY == 5 and fateZ == 0 then
     noFate = true
     yield("/vnavmesh stop")
-    PathStop()
     yield("/wait 2")
 end
 --Announcement for FateId
 if fateX ~= 0 and fateY ~= 5 and fateZ ~= 0 then
+    zoneid = GetZoneID()
     noFate = false
+
+    while IsInFate() == false and GetCharacterCondition(4) == false do
+        yield("/wait 3")
+        yield('/gaction "mount roulette"')
+        yield("/wait 3")
+    if GetCharacterCondition(4) == true and HasFlightUnlocked(zoneid) then
+        yield("/gaction jump")
+        yield("/wait 2")
+    end
+    end
+
     if HasFlightUnlocked(zoneid) then
     PathfindAndMoveTo(fateX, fateY, fateZ, true)
     else
     PathfindAndMoveTo(fateX, fateY, fateZ)
     end
+
     if Announce == 2 then
-        yield("/echo Moving to Fate: "..fateId)  
---Warning for Dangerous Fates
-    if fateId == 1888 or fateId == 1886 and FateWarning == true then
-        yield("/echo Be aware this fate can be Dangerous!")  
-        yield("/e <se.9>")
-    end
+    yield("/echo Moving to Fate: "..fateId)  
 end
 
 --Announcement for gems
 if gcount == 0  and fateId ~= 0 and Announce == 1 or Announce == 2 then
     yield("/e Gems: "..gems)
-    yield("/wait 0.5")
+    yield("/wait 0.502")
     gcount = gcount +1
 end
 end
@@ -196,10 +250,16 @@ function noFateSafe()
         fcount = fcount +1
     end
 --Change Instance
+while GetCharacterCondition(26) == true do
+    yield("/wait 1")
+end
 if ChangeInstance == true and InstanceCount ~= 4 then
+    yield("/wait 1")
     if IsInZone(1187) then      --Urqopacha
+    if InstanceCount == 0 then
     yield("/tp Wachunpelo")
     yield("/wait 6")
+    end
     while GetCharacterCondition(45) do
     yield("/wait 1")
     end
@@ -208,8 +268,10 @@ if ChangeInstance == true and InstanceCount ~= 4 then
     end
 
     if IsInZone(1188) then      --Kozama'uka
+    if InstanceCount == 0 then
     yield("/tp Ok'hanu")
     yield("/wait 6")
+    end
     while GetCharacterCondition(45) do
     yield("/wait 1")
     end
@@ -218,8 +280,10 @@ if ChangeInstance == true and InstanceCount ~= 4 then
     end
 
     if IsInZone(1189) then      --Yak T'el
+    if InstanceCount == 0 then
     yield("/tp Iq Br'aax")
     yield("/wait 6")
+    end
     while GetCharacterCondition(45) do
     yield("/wait 1")
     end
@@ -228,8 +292,10 @@ if ChangeInstance == true and InstanceCount ~= 4 then
     end
 
     if IsInZone(1190) then      --Shaaloani
+    if InstanceCount == 0 then
     yield("/tp Hhusatahwi")
     yield("/wait 6")
+    end 
     while GetCharacterCondition(45) do
     yield("/wait 1")
     end
@@ -238,38 +304,66 @@ if ChangeInstance == true and InstanceCount ~= 4 then
     end
 
     if IsInZone(1191) then      --Heritage Found
+    if InstanceCount == 0 then
     yield("/tp The Outskirts")
     yield("/wait 6")
+    end
     while GetCharacterCondition(45) do
     yield("/wait 1")
     end
     yield("/wait 2")
     PathMoveTo(-222.029, 31.869, -581.571)
-    yield("/wait 2")
+    yield("/wait 1")
     yield("/gaction jump")
     yield("/wait 1")
     end
 
     if IsInZone(1192) then      --Living Memory
+    if InstanceCount == 0 then
     yield("/tp Leynode mnemo")
     yield("/wait 6")
+    end
     while GetCharacterCondition(45) do
     yield("/wait 1")
     end
-    yield("/wait 2")
-    PathMoveTo(-0.229, 55.666, 794.944)
+    yield("/wait 1")
+    PathMoveTo(-9.324, 58.763, 796.653)
+    yield("/wait 0.503")
     yield("/wait 1")
     end
-    
-    yield("/wait 0.5")
-    yield("/li 1")
-    yield("/wait 0.5")
-    if GetCharacterCondition(45) == false then
-    yield("/li 2")
-    yield("/wait 0.5")
+    while PathIsRunning() or PathfindInProgress() do
+    yield("/wait 1")
     end
     yield("/vnavmesh stop")
+    yield("/gaction dismount")
+    if GetCharacterCondition(45) == false and InstanceCount == 0 then
+    yield("/wait 0.504")
+    yield("/li 1")
+    yield("/wait 1")
+    end
+    if GetCharacterCondition(45) == false and InstanceCount == 1 then
+    yield("/wait 0.505")
+    yield("/li 2")
+    yield("/wait 1")
+    end
+    if GetCharacterCondition(45) == false and InstanceCount == 2 then
+    yield("/wait 0.506")
+    yield("/li 3")
+    yield("/wait 1")
+    end
+    if GetCharacterCondition(45) == false and InstanceCount == 3 then
+    yield("/wait 0.507")
+    yield("/li 4")
+    yield("/wait 1")
+    end
+    if GetCharacterCondition(45) == false and IsPlayerAvailable() == true then
+    FateLocation()
+    end
+
     InstanceCount = InstanceCount + 1
+    if GetCharacterCondition(45) then
+    yield("/wait 1")
+    end
 end
 
 --If you get attacked it flies up
@@ -279,7 +373,7 @@ end
     PlocY = GetPlayerRawYPos(Name)+40
     PlocZ = GetPlayerRawZPos(Name)
     yield("/gaction jump")
-    yield("/wait 0.5")
+    yield("/wait 0.508")
     PathfindAndMoveTo(PlocX, PlocY, PlocZ, true)
     PathStop()
     yield("/wait 2")
@@ -290,13 +384,13 @@ end
 gcount = 0
 cCount = 0
 fcount = 0
-zoneid = GetZoneID()
 if NavIsReady() == false then
 yield("/echo Building Mesh Please wait...")
 end
 
 --Will mount if not mounted on start
 if GetCharacterCondition(4) == false then
+    zoneid = GetZoneID()
     yield('/gaction "mount roulette"')
     yield("/wait 3")
     if GetCharacterCondition(4) == true and HasFlightUnlocked(zoneid) then
@@ -313,6 +407,7 @@ end
 if NavIsReady() then
 yield("/echo Mesh is Ready!")
 end
+
 while true do
 gems = GetItemCount(26807)
   
@@ -323,34 +418,38 @@ if gems > 1400 and cCount == 0 then
     cCount = cCount +1
 end
 ---------------------------Fate Pathing part--------------------------------------
+if IsPlayerAvailable() then
 FateLocation()
 FatePath()
 noFateSafe()
+end
 Fate1 = fateId
 -------------------------------Fate Pathing Process------------------------------
 --Jumps when landing while pathing to a fate
 while PathIsRunning() or PathfindInProgress() and IsInFate() == false do
-    InstanceCount = 0
     if GetCharacterCondition(4) and GetCharacterCondition(77) == false and HasFlightUnlocked(zoneid) then 
         yield("/gaction jump")
         yield("/wait 0.3")
     end
 --Stops Moving to dead Fates
 FateLocation()
-yield("/wait 1")
 
 if Fate1 ~= Fate2 then
 if PathIsRunning() == false then
     FateLocation()
     FatePath()
+    yield("/wait 1")
 end
     yield("/vnavmesh stop")
-    yield("/wait 0.5")
+    yield("/wait 0.509")
 end
 --Stops Pathing when in Fate
 if PathIsRunning() and IsInFate() == true then
+    if fateId == 1919 then
+        yield("/wait 2")
+    end
     yield("/vnavmesh stop")
-    yield("/wait 0.5")
+    yield("/wait 0.510")
 end
 end
 --Path stops when there is no fate 
@@ -363,13 +462,13 @@ end
 while IsInFate() and GetCharacterCondition(4) do
     yield("/gaction dismount")
     yield("/wait 0.3")
-    PathStop()
     yield("/vnavmesh stop")
 end
 -------------------------------Fate----------------------------------------------
 --Dismounts when in fate
 bmaiactive = false
 while IsInFate() do
+    InstanceCount = 0
     yield("/vnavmesh stop")
     if GetCharacterCondition(4) == true then
         yield("/vnavmesh stop")
@@ -412,11 +511,11 @@ while GetCharacterCondition(26) do
 yield("/wait 1")
 end
 --Repair function
-if ManualRepair == true then
+if ManualRepair == true and GetCharacterCondition(4) == false then
     if NeedsRepair(RepairAmount) then
     while not IsAddonVisible("Repair") do
     yield("/generalaction repair")
-    yield("/wait 0.5")
+    yield("/wait 0.511")
     end
     yield("/pcall Repair true 0")
     yield("/wait 0.1")
@@ -432,15 +531,15 @@ end
 end
 end
 --Materia Extraction function
-if ExtractMateria == true then
+if ExtractMateria == true  and GetCharacterCondition(4) == false then
 if CanExtractMateria(100) then
     yield("/generalaction \"Materia Extraction\"")
     yield("/waitaddon Materialize")
 while CanExtractMateria(100)==true do
     yield("/pcall Materialize true 2")
-    yield("/wait 0.5")
+    yield("/wait 0.512")
 while GetCharacterCondition(39) do
-    yield("/wait 0.5")
+    yield("/wait 0.513")
 end
 end 
     yield("/wait 1")
@@ -449,13 +548,13 @@ end
 end 
 end
 --Retainer Process
-if Retainers == true then 
+if Retainers == true and GetCharacterCondition(26) == false then 
     if ARRetainersWaitingToBeProcessed() == true then
-        if not IsInZone(129) then
+        while not IsInZone(129) do
         yield("/tp limsa")
-        yield("/wait 6.1")
+        yield("/wait 7")
         end
-        while IsPlayerAvailable() == false or NavIsReady() == false do
+        while IsPlayerAvailable() == false and NavIsReady() == false do
         yield("/wait 1")
         end
         if IsPlayerAvailable() and NavIsReady() then
@@ -465,32 +564,63 @@ if Retainers == true then
         while PathIsRunning() or PathfindInProgress() do
         yield("/wait 1")
         end
+        if PathIsRunning() == false or PathfindInProgress() == false then
+        PathfindAndMoveTo(-122.7251, 18.0000, 20.3941)
+        yield("/wait 1")
+        end
         yield("/target Summoning Bell")
-        yield("/wait 0.5")
+        while GetTargetName() == "" do
+        yield("/target Summoning Bell")
+        end 
+        while GetTargetName() == "Summoning Bell" and GetDistanceToTarget() > 4.5 do
+            PathfindAndMoveTo(-122.7251, 18.0000, 20.3941)
+            yield("/wait 1")
+            while PathIsRunning() or PathfindInProgress() do
+                yield("/wait 1")
+            end
+        end
+        if GetTargetName() == "Summoning Bell" and GetDistanceToTarget() <= 4.5 then
+        yield("/wait 0.514")
         yield("/interact")
+        if IsAddonVisible("RetainerList") then
         yield("/ays e")
         yield("/echo processing retainers")
+        yield("/wait 1")
+        end
+        end
+       
         while ARRetainersWaitingToBeProcessed() == true do
             yield("/wait 1")
         end
+
+        yield("/wait 1")
         yield("/waitaddon RetainerList")
         yield("/e Finished processing retainers")
+        yield("/wait 1")
         yield("/pcall RetainerList true -1")
         yield("/wait 1")
+        while IsInZone(129) do
+        if IsAddonVisible("RetainerList") then
+        yield("/pcall RetainerList true -1")
+        end
+        if IsAddonVisible("RetainerList") == false then
         yield("/tp "..teleport)
-        yield("/wait 6")
+        yield("/wait 7")
+        end
+        end
         while GetCharacterCondition(45) do
             yield("/wait 1")
         end
+        yield("/wait 1")
     end
 end
-------------------------------Teleport-----------------------------------------------
+------------------------------Vouchers-----------------------------------------------
 --old Vouchers!
-if gems > 1400 and Exchange == true then
+if gems > 1400 and Exchange == true and OldV == true then
     yield("/tp Old Sharlayan")
-    yield("/wait 6")
+    yield("/wait 7")
 while GetCharacterCondition(45) == true do
-    yield("/wait 0.5")
+    yield("/wait 0.515")
 end
 if IsInZone(962) then
     while PathIsRunning() == false or PathfindInProgress() == false do
@@ -512,9 +642,82 @@ if GetCharacterCondition(31) == true then
     yield("/pcall ShopExchangeCurrency true -1")
     yield("/wait 1")
     yield("/tp "..teleport)
-    yield("/wait 6")
+    yield("/wait 7")
 while GetCharacterCondition(45) do
     yield("/wait 1")
+end
+end
+end
+end
+
+--new Vouchers!
+if gems > 1400 and Exchange == true and OldV == false then
+    while not IsInZone(1186) do
+    yield("/tp Solution Nine")
+    yield("/wait 7")
+    
+    while GetCharacterCondition(45) == true do
+        yield("/wait 0.516")
+    end
+end
+if IsInZone(1186) then
+
+    while IsPlayerAvailable() == false or NavIsReady() == false do
+    yield("/wait 1")
+    end
+
+    if PathIsRunning() == false or PathfindInProgress() == false then
+    yield("/target Aetheryte")
+    yield("/lockon")
+    yield("/automove")
+    end
+
+    while GetDistanceToTarget() > 11 do
+    yield("/wait 0.517")
+    end
+
+    while GetCharacterCondition(45) == false do
+    yield("/li Nexus Arcade")
+    yield("/wait 2")
+    end
+
+    while GetCharacterCondition(45) == true or GetCharacterCondition(32) == true do
+    yield("/wait 1")
+    end
+
+    if IsPlayerAvailable() == true and GetCharacterCondition(45) == false or GetCharacterCondition(32) == false then
+        yield("/wait 1")
+        PathfindAndMoveTo(-198.466, 0.922, -6.955) --NPC
+        yield("/wait 1")
+    end
+
+    while PathIsRunning() == true or PathfindInProgress() == true do
+        yield("/wait 1")
+    end
+
+    if IsInZone(1186) and PathIsRunning() == false or PathfindInProgress() == false then
+        yield("/target Beryl")
+        yield("/wait 0.518")
+        
+        while IsInZone(1186) and not IsAddonVisible("ShopExchangeCurrency") do
+        yield("/interact")
+        yield("/wait 0.519")
+        yield("/click Talk_Click")
+        yield("/wait 1")
+        end
+
+        if IsInZone(1186) and GetCharacterCondition(31) == true and IsAddonVisible("ShopExchangeCurrency") then
+            yield("/pcall ShopExchangeCurrency false 0 5 1") --Change the last number "13" to the amount u want to buy 
+            yield("/wait 0.520")
+            yield("/pcall SelectYesno true 0")
+            yield("/wait 0.521")
+            yield("/pcall ShopExchangeCurrency true -1")
+            yield("/wait 1")
+            yield("/tp "..teleport)
+            yield("/wait 7")
+        while GetCharacterCondition(45) do
+            yield("/wait 1")
+        end
 end
 end
 end
