@@ -27,6 +27,7 @@
                 Removed Fatewarning (not enough fates for it)
                 made the Description in Settings more clear (hopefully)
                 in Required/Optional Plugins there will be a new field in the "()" that will be "[]" to show for what settings you need for it
+                fixed getting stuck by making a 2 second counter
     -> 0.1.5:   added AutoRetainer support
                     ->new settings for it
                     ->new Optional Plugin requirments for it
@@ -100,7 +101,7 @@ RepairAmount = 20          --the amount it need to drop before Repairing
 ExtractMateria = true      --should it Extract Materia
 
 BMR = false                 --if you want to use the BossMod dodge/follow mode
-ChocoboS = true            --should it Activate the Chocobo settings in Pandora (to summon it)
+ChocoboS = true             --should it Activate the Chocobo settings in Pandora (to summon it)
 
 Announce = 2
 --Change this value for how much echos u want in chat 
@@ -277,6 +278,7 @@ end
 InstanceCount = 0
 --When there is no Fate 
 function noFateSafe()
+    stuck = 0
     if noFate == true then
     if fcount == 0 then
         yield("/echo No Fate existing")
@@ -364,8 +366,12 @@ if ChangeInstance == true and InstanceCount ~= 4 then
     yield("/wait 0.503")
     yield("/wait 1")
     end
-    while PathIsRunning() or PathfindInProgress() do
+    while PathIsRunning() or PathfindInProgress() and stuck <= 2 do
     yield("/wait 1")
+    stuck = stuck + 1
+    if stuck == 2 then
+    yield("/vnavmesh stop")
+    end
     end
     yield("/vnavmesh stop")
     yield("/gaction dismount")
