@@ -18,8 +18,11 @@
                     ->shouldn't stop the script anymore (i hope)
                     ->added instance 3 and 4 for travelling
                     ->it will no longer teleport for instance travel after Teleporting one time until you entert a fate again
+                Blacklist
+                  ->added the 2 Boss fates
+                  ->new Blacklist function
+                  ->added more fates to the Blacklist
                 fixed Retainers
-                added the 2 Boss fates to the Blacklist and some more
                 added a chat Warning when the Required/Optional Plugins aren't enabled if they are required (enabled in settings) only works on 3pp Plugins
                 Removed Fatewarning (not enough fates for it)
                 made the Description in Settings more clear (hopefully)
@@ -162,6 +165,36 @@ end
 end 
 
 ------------------------------Functions----------------------------------------------
+--Array declaration
+FatesBlacklist = { --Fates to blacklist
+    1931,
+    1937,
+    1936,
+    1886,
+    1906,
+    1869,
+    1865,
+    1871,
+    1949,
+    1957,
+    1913,
+    1917,
+    1922, -- S rank
+    1909, -- collect fate
+    1897, -- dangerous
+    1908 -- Boss fight, very long
+}
+
+--Check if fate is in blacklist 
+function IsBlackListed (fateID)
+    for index, value in ipairs(FatesBlacklist) do
+        if value == fateID then
+            return true
+        end
+    end
+    return false
+end
+
 --Gets the Location fo the Fate
 function FateLocation()
     if GetCharacterCondition(45) == false then
@@ -170,7 +203,7 @@ function FateLocation()
     fateId = 0
     for i = 0, fates.Count-1 do
     tempfate = fates[i]
-    if GetFateDuration(fates[i]) > 0 and tempfate ~= 1931 and tempfate ~= 1937 and tempfate ~= 1936 and tempfate ~= 1906 and tempfate ~= 1869 and tempfate ~= 1865 and tempfate ~= 1922 and tempfate ~= 1871 and tempfate ~= 1949 and tempfate ~= 1957 and tempfate ~= 1913 and tempfate ~= 1917 then --(Blacklist (still need to find away to make it better))
+    if GetFateDuration(fates[i]) > 0 and IsBlackListed(tempfate) == false then
         distance = GetDistanceToPoint(GetFateLocationX(fates[i]), GetFateLocationY(fates[i]), GetFateLocationZ(fates[i]))
     if distance < minDistance then
         minDistance = distance
