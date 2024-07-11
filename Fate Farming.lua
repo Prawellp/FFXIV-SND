@@ -740,7 +740,7 @@ if IsInZone(1186) then
         end
 
         if IsInZone(1186) and GetCharacterCondition(31) == true and IsAddonVisible("ShopExchangeCurrency") then
-            yield("/pcall ShopExchangeCurrency false 0 5 1") --Change the last number "13" to the amount u want to buy 
+            yield("/pcall ShopExchangeCurrency false 0 5 13") --Change the last number "13" to the amount u want to buy 
             yield("/wait 0.520")
             yield("/pcall SelectYesno true 0")
             yield("/wait 0.521")
