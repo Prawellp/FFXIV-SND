@@ -16,7 +16,7 @@
                     ->In SND settings under /target turn off Stop macro if not found setting.
                     ->In SND settings under /waitaddon turn off both settings.
                 Stopped it from mounting at the start till a fate is found so you don't mount jump then unmount if there are no fates.
-Added names of fates to blacklist.
+                Added names of fates to blacklist.
     -> 0.1.8.1  got rid of uneeded echo messages
     -> 0.1.8    teleport to closest aethyrite for fates.
     -> 0.1.7:   added a new testing feature where you can test stuff that may change other stuff or even be added if enough Positive feedback is given and no bug happening
