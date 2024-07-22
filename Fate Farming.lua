@@ -4,13 +4,21 @@
   *            Fate Farming              * 
   ****************************************
 
-  Created by: Prawellp
+  Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9
 
   ***********
   * Version *
-  *  0.1.7  *
+  *  0.1.9  *
   ***********
 
+    -> 0.1.9    Fixed running into Aetherytes when trying to change instace.
+                    ->Will also loop back to the first instance after no fates found in third instance.
+                    ->In SND settings under /target turn off Stop macro if not found setting.
+                    ->In SND settings under /waitaddon turn off both settings.
+                Stopped it from mounting at the start till a fate is found so you don't mount jump then unmount if there are no fates.
+Added names of fates to blacklist.
+    -> 0.1.8.1  got rid of uneeded echo messages
+    -> 0.1.8    teleport to closest aethyrite for fates.
     -> 0.1.7:   added a new testing feature where you can test stuff that may change other stuff or even be added if enough Positive feedback is given and no bug happening
                     ->added new settings for it
                     ->added testing for instance change
@@ -94,9 +102,9 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 
 --true = yes
 --false = no
-testing = false            --if you want to test features that may be added or change other sutff
+testing = false           --if you want to test features that may be added or change other sutff
 
-teleport = "Wachunpelo" --Enter the name of the Teleporter where youu farm Fates so it teleport back to the area and keeps farming
+teleport = "Iq Br'aax"     --Enter the name of the Teleporter where youu farm Fates so it teleport back to the area and keeps farming
 Exchange = false            --should it Exchange Vouchers
 OldV = false               --should it Exchange Old Vouchers
 ChangeInstance = true      --sChangeInstancehould it Change Instance when there is no Fate (only works on DT fates)
@@ -107,7 +115,7 @@ RepairAmount = 20          --the amount it need to drop before Repairing
 ExtractMateria = true      --should it Extract Materia
 CompletionToIgnoreFate = 80 --Percent above which we ignore the fate
 
-BMR = false                 --if you want to use the BossMod dodge/follow mode
+BMR = true                 --if you want to use the BossMod dodge/follow mode
 ChocoboS = true            --should it Activate the Chocobo settings in Pandora (to summon it)
 
 Announce = 2
@@ -174,22 +182,22 @@ end
 ------------------------------Functions----------------------------------------------
 --Array declaration
 FatesBlacklist = { --Fates to blacklist
-    1931,
-    1937,
-    1936,
-    1886,
-    1906,
-    1869,
-    1865,
-    1871,
-    1949,
-    1957,
-    1913,
-    1917,
-    1922, -- S rank
-    1909, -- collect fate
-    1897, -- dangerous
-    1908 -- Boss fight, very long
+    1931, -- Combing the Area, collect fate
+    1937, -- Borne on the back of Burrowers, collect fate
+    1936, -- mole patrol, defence fate?
+    1886, -- Young Volcanoes, dangerous
+    1906, -- Escape Shroom, collect fate
+    1869, -- The Serpentlord Sires, collect fate
+    1865, -- Gonna Have me Some Fur, collect fate
+    1871, -- The Serpentlord Seethes, S rank fate
+    1949, -- License to Dill, collect fate
+    1957, -- When It's So Salvage, collect fate
+    1913, -- Seeds of Tomorrow, collect fate
+    1917, -- Scattered Memories, collect fate
+    1922, -- Mascot Murder, S rank fate
+    1909, -- The Spawning, collect fate
+    1897, -- The Departed, dangerous
+    1908 -- Moths Are Tough, Boss fight, very long
 }
 
 --Check if fate is in blacklist 
@@ -202,11 +210,95 @@ function IsBlackListed (fateID)
     return false
 end
 
+function CheckTeleport (fateID)
+    fatex = GetFateLocationX(fateID)
+    fatey = GetFateLocationY(fateID)
+    fatez = GetFateLocationZ(fateID)
+    Playerx = GetPlayerRawXPos()
+    Playery = GetPlayerRawYPos()
+    Playerz = GetPlayerRawZPos()
+    distanceatheryte1 = 100000000
+    distanceatheryte2 = 100000000
+    distanceatheryte3 = 100000000000
+    distanceleeway = 150000
+    distancefly = DistanceBetween(fatex, fatey, fatez, Playerx, Playery, Playerz)
+    teleportath1 = ""
+    teleportath2 = ""
+    teleportath3 = ""
+
+
+    if IsInZone(1187) then       --Urqopacha
+    distanceatheryte1 = DistanceBetween(fatex, fatey, fatez, 335, -160, -415) -- Wach
+    distanceatheryte2 = DistanceBetween(fatex, fatey, fatez, 465, 115, 635) -- Worl
+    teleportath1 = "Wachunpelo"
+    teleportath2 = "Worlar's Echo"
+    end
+    
+    if IsInZone(1188) then       --Kozama'uka
+    distanceatheryte1 = DistanceBetween(fatex, fatey, fatez, -170, 6, -470) -- Ok'Hanu
+    distanceatheryte2 = DistanceBetween(fatex, fatey, fatez, -482, 123, 315) -- earth
+    distanceatheryte3 = DistanceBetween(fatex, fatey, fatez, 545, 115, 200) -- many
+    teleportath1 = "Ok'hanu"
+    teleportath2 = "Earthenshire"
+    teleportath3 = "Many Fires"
+    end
+
+    if IsInZone(1189) then     --Yak T'el
+    distanceatheryte1 = DistanceBetween(fatex, fatey, fatez, -400, 24, -431) -- Iq Br'aax
+    distanceatheryte2 = DistanceBetween(fatex, fatey, fatez, 720, -132, 527) -- Mamook
+    teleportath1 = "Iq Br'aax"
+    teleportath2 = "Mamook"
+    end
+
+    if IsInZone(1190) then      --Shaaloani
+    distanceatheryte1 = DistanceBetween(fatex, fatey, fatez, 390, 0, 465) -- Hhusatahwi
+    distanceatheryte2 = DistanceBetween(fatex, fatey, fatez, -295, 19, -115) -- Sheshenewezi Springs
+    distanceatheryte3 = DistanceBetween(fatex, fatey, fatez, 310, -15, -567) -- Mehwahhetsoan
+    teleportath1 = "Hhusatahwi"
+    teleportath2 = "Sheshenewezi Springs"
+    teleportath3 = "Mehwahhetsoan"
+    end
+
+    if IsInZone(1191) then      --Heritage Found
+    distanceatheryte1 = DistanceBetween(fatex, fatey, fatez, 515, 145, 210) -- Yyasulani Station
+    distanceatheryte2 = DistanceBetween(fatex, fatey, fatez, -221, 32, -583) -- The Outskirts
+    distanceatheryte3 = DistanceBetween(fatex, fatey, fatez, -222, 31, 123) -- Electrope Strike
+    teleportath1 = "Yyasulani Station"
+    teleportath2 = "The Outskirts"
+    teleportath3 = "Electrope Strike"
+    end
+
+    if IsInZone(1192) then      --Living Memory
+    distanceatheryte1 = DistanceBetween(fatex, fatey, fatez, 0, 56, 796) -- Leynode Mnemo
+    distanceatheryte2 = DistanceBetween(fatex, fatey, fatez, 659, 27, -285) -- Lleynode Pyro
+    distanceatheryte3 = DistanceBetween(fatex, fatey, fatez, -253, 56, -400) -- Lleynode Aero
+    teleportath1 = "Leynode Mnemo"
+    teleportath2 = "Leynode Pyro"
+    teleportath3 = "Leynode Aero"
+    end
+
+    comparisondist1 = (distanceatheryte1 - distancefly) + distanceleeway
+    comparisondist2 = (distanceatheryte2 - distancefly) + distanceleeway
+    comparisondist3 = (distanceatheryte3 - distancefly) + distanceleeway
+
+                if comparisondist1 < comparisondist2 and comparisondist1 < comparisondist3 and comparisondist1 < 0 then
+                    yield("/tp "..teleportath1)
+                    yield("/wait 8")
+                elseif comparisondist2 < comparisondist3 and comparisondist2 < 0 then
+                    yield("/tp "..teleportath2)
+                    yield("/wait 8")
+                elseif comparisondist3 < 0 then
+                    yield("/tp "..teleportath3)
+                    yield("/wait 8")
+                end
+                
+end
+
 --Gets the Location fo the Fate
 function FateLocation()
     if GetCharacterCondition(45) == false then
     fates = GetActiveFates()
-    minDistance = 50000
+    minDistance = 100000
     fateId = 0
     for i = 0, fates.Count-1 do
     tempfate = fates[i]
@@ -238,7 +330,13 @@ end
 if fateX ~= 0 and fateY ~= 5 and fateZ ~= 0 then
     zoneid = GetZoneID()
     noFate = false
+while GetCharacterCondition(26) == true do
+yield("/wait 1")
+end
+    
+CheckTeleport(fateId)
 
+    if noFate ~= true then
     while IsInFate() == false and GetCharacterCondition(4) == false do
         yield("/wait 3.0001")
         yield('/gaction "mount roulette"')
@@ -248,6 +346,7 @@ if fateX ~= 0 and fateY ~= 5 and fateZ ~= 0 then
         yield("/wait 2.0002")
     end
     end
+end
 
     if HasFlightUnlocked(zoneid) then
     PathfindAndMoveTo(fateX, fateY, fateZ, true)
@@ -288,103 +387,14 @@ function noFateSafe()
         yield("/echo No Fate existing")
         fcount = fcount +1
     end
+
 --Change Instance
 while GetCharacterCondition(26) == true do
     yield("/wait 1.0002")
 end
-if ChangeInstance == true and InstanceCount ~= 4 then
+if ChangeInstance == true and InstanceCount ~= 3 then
 yield("/wait 1.0003")
 
-if testing == false then 
-    if IsInZone(1187) then      --Urqopacha
-    if InstanceCount == 0 then
-    yield("/tp Wachunpelo")
-    yield("/wait 7.0001")
-    end
-    while GetCharacterCondition(45) do
-    yield("/wait 1.0004")
-    end
-    yield("/wait 2.0003")
-    PathMoveTo(334.213, -160.170, -418.789)
-    end
-end
-
-if testing == false then
-    if IsInZone(1188) then      --Kozama'uka
-    if InstanceCount == 0 then
-    yield("/tp Ok'hanu")
-    yield("/wait 7.0002")
-    end
-    while GetCharacterCondition(45) do
-    yield("/wait 1.0005")
-    end
-    yield("/wait 2.0004")
-    PathMoveTo(-167.426, 7.467, -478.871)
-    end
-end
-
-if testing == false then
-    if IsInZone(1189) then      --Yak T'el
-    if InstanceCount == 0 then
-    yield("/tp Iq Br'aax")
-    yield("/wait 7.0003")
-    end
-    while GetCharacterCondition(45) do
-    yield("/wait 1.0006")
-    end
-    yield("/wait 2.0005")
-    PathMoveTo(-397.166, 23.464, -429.682)
-    end
-end
-
-if testing == false then
-    if IsInZone(1190) then      --Shaaloani
-    if InstanceCount == 0 then
-    yield("/tp Hhusatahwi")
-    yield("/wait 7.0004")
-    end 
-    while GetCharacterCondition(45) do
-    yield("/wait 1.0007")
-    end
-    yield("/wait 2.0006")
-    PathMoveTo(387.697, -0.241, 469.930)
-    end
-end
-
-if testing == false then
-    if IsInZone(1191) then      --Heritage Found
-    if InstanceCount == 0 then
-    yield("/tp The Outskirts")
-    yield("/wait 7.0005")
-    end
-    while GetCharacterCondition(45) do
-    yield("/wait 1.0008")
-    end
-    yield("/wait 2.0007")
-    PathMoveTo(-222.029, 31.869, -581.571)
-    yield("/wait 1.0009")
-    yield("/gaction jump")
-    yield("/wait 1.0010")
-    end
-end
-
-if testing == false then
-    if IsInZone(1192) then      --Living Memory
-    if InstanceCount == 0 then
-    yield("/tp Leynode mnemo")
-    yield("/wait 7.0006")
-    end
-    while GetCharacterCondition(45) do
-    yield("/wait 1.0011")
-    end
-    yield("/wait 1.0012")
-    PathMoveTo(-9.324, 58.763, 796.653)
-    yield("/wait 0.5003")
-    yield("/wait 1.0013")
-    end
-end
-
-if testing == true then 
     yield("/target Aetheryte")
     yield("/wait 1.0014")
 
@@ -421,7 +431,7 @@ if testing == true then
 
     yield("/lockon")
     yield("/automove")
-    while GetDistanceToTarget() > 11 do
+    while GetDistanceToTarget() > 15 do
     yield("/wait 0.5004")
     if IsMoving() == false then
     if GetTargetName() == "Aetheryte" then
@@ -431,7 +441,6 @@ if testing == true then
     yield("/automove")
     end
     end
-end
 
     while PathIsRunning() or PathfindInProgress() do
     yield("/wait 1.0016")
@@ -453,16 +462,17 @@ end
     yield("/li 3")
     yield("/wait 1.0019")
     end
-    if GetCharacterCondition(45) == false and InstanceCount == 3 then
-    yield("/wait 0.5008")
-    yield("/li 4")
-    yield("/wait 1.0020")
-    end
     if GetCharacterCondition(45) == false and IsPlayerAvailable() == true then
     FateLocation()
+    yield("/lockon off")
+    yield("/automove off")
     end
-
+    
+    if InstanceCount == 2 then
+       InstanceCount = 0
+    else
     InstanceCount = InstanceCount + 1
+    end
     if GetCharacterCondition(45) then
     yield("/wait 1.0021")
     end
@@ -491,16 +501,17 @@ yield("/echo Building Mesh Please wait...")
 end
 
 --Will mount if not mounted on start
-if GetCharacterCondition(4) == false then
+--if GetCharacterCondition(4) == false then
+    --yield('/gaction "mount roulette"')
+    --yield("/wait 3.0003")
+    --if GetCharacterCondition(4) == true and HasFlightUnlocked(zoneid) then
+    --yield("/gaction jump")
+    --yield("/wait 2.0009")
+    --end
+--end
     zoneid = GetZoneID()
-    yield('/gaction "mount roulette"')
-    yield("/wait 3.0003")
-    if GetCharacterCondition(4) == true and HasFlightUnlocked(zoneid) then
-    yield("/gaction jump")
-    yield("/wait 2.0009")
-    end
-    end
-    yield("/rotation auto")
+    yield("/rotation manual")
+    yield("/rotation settings aoetype 1")
   
 --Start of the Code
 while NavIsReady() == false do
