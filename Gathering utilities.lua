@@ -76,13 +76,13 @@ end
 end
 
 --Food usage
-if not HasStatusId(48) and (Food == "" == false) and Foodcheck <= 5 then
-    while not HasStatusId(48) and (Food == "" == false) and Foodcheck <= 5 do
+if not HasStatusId(48) and (Food == "" == false) and Foodcheck <= 10 and GetCharacterCondition(27) == false then
+    while not HasStatusId(48) and (Food == "" == false) and Foodcheck <= 10 and GetCharacterCondition(27) == false do
         yield("/item " .. Food)
         yield("/wait 2")
         Foodcheck = Foodcheck + 1
     end
-    if Foodcheck >= 5 then
+    if Foodcheck >= 10 then
     yield("/echo no Food left")
     yield("/e <se.1>")
     end
@@ -92,13 +92,13 @@ if not HasStatusId(48) and (Food == "" == false) and Foodcheck <= 5 then
 end
 
 --Medicane usage
-if not HasStatusId(49) and (Medicine == "" == false) and Medicinecheck <= 5 then
-    while not HasStatusId(49) and (Medicine == "" == false) and Medicinecheck <= 5 do
+if not HasStatusId(49) and (Medicine == "" == false) and Medicinecheck <= 10 and GetCharacterCondition(27) == false then
+    while not HasStatusId(49) and (Medicine == "" == false) and Medicinecheck <= 10 and GetCharacterCondition(27) == false do
         yield("/item " .. Medicine)
         yield("/wait 2")
         Medicinecheck = Medicinecheck + 1
     end
-    if Medicinecheck >= 5 then
+    if Medicinecheck >= 10 then
     yield("/echo no Medicine left")
     yield("/e <se.1>")
     end
