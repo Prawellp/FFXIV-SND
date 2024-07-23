@@ -509,9 +509,9 @@ end
     --yield("/wait 2.0009")
     --end
 --end
-    zoneid = GetZoneID()
-    yield("/rotation manual")
-    yield("/rotation settings aoetype 1")
+zoneid = GetZoneID()
+yield("/rotation auto")
+yield("/rotation settings aoetype 2")
   
 --Start of the Code
 while NavIsReady() == false do
