@@ -45,14 +45,17 @@ end
 end
 
 --Materia Extract
-if CanExtractMateria(100) and Extract == true then
+if CanExtractMateria(100) and Extract == true and GetCharacterCondition(27) == false then
 yield("/gbr auto off")
 yield("/visland pause")
     yield("/generalaction \"Materia Extraction\"")
     yield("/waitaddon Materialize")
-while CanExtractMateria(100) == true do
+while CanExtractMateria(100) == true and GetCharacterCondition(27) == false do
     if GetCharacterCondition(4) == true then
     yield("/gaction dismount")
+    end
+    if not IsAddonVisible("Materialize") then
+    yield("/generalaction \"Materia Extraction\"")
     end
     yield("/pcall Materialize true 2")
     yield("/wait 0.5")
