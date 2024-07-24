@@ -744,7 +744,7 @@ while GetCharacterCondition(31) == false do
     yield("/target Gadfrid")
     yield("/wait 1.0043")
     yield("/interact")
-    yield("/click Talk_Click")
+    yield("/click Talk Click") 
     yield("/wait 1.0044")
 end
 if GetCharacterCondition(31) == true then
@@ -815,7 +815,7 @@ if IsInZone(1186) then
         while IsInZone(1186) and not IsAddonVisible("ShopExchangeCurrency") do
         yield("/interact")
         yield("/wait 0.5020")
-        yield("/click Talk_Click")
+        yield("/click Talk Click")
         yield("/wait 1.0054")
         end
 
