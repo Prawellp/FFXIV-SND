@@ -8,9 +8,10 @@
 
   ***********
   * Version *
-  *  0.1.9  *
+  * 0.1.9.1 *
   ***********
 
+    -> 0.1.9.1  fixed Click Talk for the Vouchers
     -> 0.1.9    Fixed running into Aetherytes when trying to change instace.
                     ->Will also loop back to the first instance after no fates found in third instance.
                     ->In SND settings under /target turn off Stop macro if not found setting.
@@ -44,17 +45,6 @@
                 Removed Fatewarning (not enough fates for it)
                 made the Description in Settings more clear (hopefully)
                 in Required/Optional Plugins there will be a new field in the "()" that will be "[]" to show for what settings you need for it
-    -> 0.1.5:   added AutoRetainer support
-                    ->new settings for it
-                    ->new Optional Plugin requirments for it
-                changed to Value of old Vouchers bought from 9 to 13
-    -> 0.1.4:   added non-flight support
-                will wait for Mesh to be ready before starting now
-    -> 0.1.3:   added Bossmod AI feature for dodging and following target (look in Optional Plugins for settings) this is still experimental so it can bug a bit
-                Blacklistet some Fates in the Second Area of DT
-                Removed Fate settings because they are important. and no need settings for that
-                added the section Optional Plugins for stuff like Instance travel, Materia extraction and Bossmod
-                Fixed the voucher exchange (but still the old Voucher!!!)
 
     Known Issues: "Cannot execute at this time." will appear sometimes in the chat you can just Ignore that.
 
