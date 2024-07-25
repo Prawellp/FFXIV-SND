@@ -8,9 +8,24 @@
 
   ***********
   * Version *
-  * 0.1.9.1 *
+  *  0.2.0  *
   ***********
 
+    -> 0.2.0    Code changes
+                    added auto snd property set (sets the snd settings so you don't have to)
+                    sets the rsr settings to auto (and aoetype 2) when your on Tank (DRK not included), and on other classes to manual (and aoetype 1) 
+                Plugin changes
+                    removed the need of simple tweaks (plugin)
+                    removed the need of yes already for the materia (plugin)
+                    some bossmod settings will now be automatically set so no need to manually check for them (Requires version 7.2.0.22)
+                        (Please make sure to change the Desired distance for Meeles manually tho)
+                Setting changes
+                    added fatewait for the amount it should wait before landing
+                    removed Manualrepair setting
+                    if RepairAmount is set to 0 it wont repair (to have less settings)
+                    Reordert the settings and named some categorys
+                    BMR will now be default set to true
+                    added food usage
     -> 0.1.9.1  fixed Click Talk for the Vouchers
     -> 0.1.9    Fixed running into Aetherytes when trying to change instace.
                     ->Will also loop back to the first instance after no fates found in third instance.
@@ -29,24 +44,7 @@
                 added new setting "CompletionToIgnoreFate"
                     -> will skip fates that have above the given number of completion Percentage
                 added numbers behind the waits for better Debugging so when Reporting something because your stuck please Provide the wait time where its stuck
-    -> 0.1.6:   added new Vouchers
-                    ->new settings if you want to buy the old ones or new ones
-                    ->will use the aetheryte so make sure to have Lifestream
-                fixed Instance travel
-                    ->shouldn't stop the script anymore (i hope)
-                    ->added instance 3 and 4 for travelling
-                    ->it will no longer teleport for instance travel after Teleporting one time until you entert a fate again
-                Blacklist
-                  ->added the 2 Boss fates
-                  ->new Blacklist function
-                  ->added more fates to the Blacklist
-                fixed Retainers
-                added a chat Warning when the Required/Optional Plugins aren't enabled if they are required (enabled in settings) only works on 3pp Plugins
-                Removed Fatewarning (not enough fates for it)
-                made the Description in Settings more clear (hopefully)
-                in Required/Optional Plugins there will be a new field in the "()" that will be "[]" to show for what settings you need for it
 
-    Known Issues: "Cannot execute at this time." will appear sometimes in the chat you can just Ignore that.
 
 *********************
 *  Required Plugins *
@@ -72,15 +70,8 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
     -> Teleporter :  (for Teleporting to aetherytes [teleport][Exchange][Retainers])
     -> Lifestream :  (for chaning Instances [ChangeInstance][Exchange]) https://raw.githubusercontent.com/NightmareXIV/MyDalamudPlugins/main/pluginmaster.json
     -> AutoRetainer : (for Retainers [Retainers])   https://love.puni.sh/ment.json
-    -> Simple Tweaks Plugin: (for targeting [Exchange])
-        -> enable "Fix '/target' command"
-
-    -> Yes Already : (for Materia Extraction [ExtractMateria])  https://love.puni.sh/ment.json
-        -> Bothers -> MaterializeDialog
-
     -> Bossmod Reborn : (for AI dodging [BMR])  https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json
-        -> AI Settings -> enable "Follow during combat" and "Follow out of combat"
-
+        -> make sure to set the Max distance in the AI Settings to the desired distance (25 is to far for Meeles)
 
 ]]
 --[[
@@ -92,22 +83,27 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 
 --true = yes
 --false = no
-testing = false           --if you want to test features that may be added or change other sutff
 
+--Teleport and Voucher
 teleport = "Iq Br'aax"     --Enter the name of the Teleporter where youu farm Fates so it teleport back to the area and keeps farming
-Exchange = false            --should it Exchange Vouchers
+ChangeInstance = true      --should it Change Instance when there is no Fate (only works on DT fates)
+Exchange = false           --should it Exchange Vouchers
 OldV = false               --should it Exchange Old Vouchers
-ChangeInstance = true      --sChangeInstancehould it Change Instance when there is no Fate (only works on DT fates)
-Retainers = false           --should it do Retainers
 
-ManualRepair = true        --Should it Repair your gear if it falls Below the Repair Amount?
-RepairAmount = 20          --the amount it need to drop before Repairing
-ExtractMateria = true      --should it Extract Materia
+--Fate settings
 CompletionToIgnoreFate = 80 --Percent above which we ignore the fate
-
+fatewait = 0               --the amount how long it should when before dismounting (0 = at the edge of the fate 3-5 = should be in the middle of the fate)
 BMR = true                 --if you want to use the BossMod dodge/follow mode
-ChocoboS = true            --should it Activate the Chocobo settings in Pandora (to summon it)
 
+--Utilities
+RepairAmount = 20          --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repaier. onky supports self repair)
+ExtractMateria = true      --should it Extract Materia
+Food = ""                  --Leave "" Blank if you don't want to use any food
+                           --if its HQ include <hq> next to the name "Baked Eggplant <hq>"
+
+--Other stuff
+Retainers = false          --should it do Retainers
+ChocoboS = true            --should it Activate the Chocobo settings in Pandora (to summon it)
 Announce = 2
 --Change this value for how much echos u want in chat 
 --2 is the fate your Moving to and Bicolor gems amount
@@ -486,24 +482,40 @@ end
 gcount = 0
 cCount = 0
 fcount = 0
+Foodcheck = 0
+zoneid = GetZoneID()
+
+--snd property
+function setSNDProperty(propertyName, value)
+    local currentValue = GetSNDProperty(propertyName)
+    if currentValue ~= value then
+        SetSNDProperty(propertyName, tostring(value))
+        LogInfo("[SetSNDProperty] " .. propertyName .. " set to " .. tostring(value))
+    end
+end
+setSNDProperty("UseItemStructsVersion", true)
+setSNDProperty("UseSNDTargeting", true)
+setSNDProperty("StopMacroIfTargetNotFound", false)
+setSNDProperty("StopMacroIfCantUseItem", false)
+setSNDProperty("StopMacroIfItemNotFound", false)
+setSNDProperty("StopMacroIfAddonNotFound", false)
+setSNDProperty("StopMacroIfAddonNotVisible", false)
+
+
+Class = GetClassJobId()
+if Class ~= 21 or Class ~= 37 or Class ~= 19 then
+yield("/rotation manual")
+yield("/rotation settings aoetype 1")
+end
+if Class == 21 or Class == 37 or Class == 19 then
+yield("/rotation auto")
+yield("/rotation settings aoetype 2")
+end
+
+--vnavmesh building
 if NavIsReady() == false then
 yield("/echo Building Mesh Please wait...")
 end
-
---Will mount if not mounted on start
---if GetCharacterCondition(4) == false then
-    --yield('/gaction "mount roulette"')
-    --yield("/wait 3.0003")
-    --if GetCharacterCondition(4) == true and HasFlightUnlocked(zoneid) then
-    --yield("/gaction jump")
-    --yield("/wait 2.0009")
-    --end
---end
-zoneid = GetZoneID()
-yield("/rotation auto")
-yield("/rotation settings aoetype 2")
-  
---Start of the Code
 while NavIsReady() == false do
 yield("/wait 1.0022")
 end
@@ -511,9 +523,25 @@ if NavIsReady() then
 yield("/echo Mesh is Ready!")
 end
 
+--Start of the Code
 while true do
 gems = GetItemCount(26807)
-  
+
+--food usage
+if not HasStatusId(48) and (Food == "" == false) and Foodcheck <= 10 and GetCharacterCondition(27) == false then
+    while not HasStatusId(48) and (Food == "" == false) and Foodcheck <= 10 and GetCharacterCondition(27) == false do
+        yield("/item " .. Food)
+        yield("/wait 2")
+        Foodcheck = Foodcheck + 1
+    end
+    if Foodcheck >= 10 then
+    yield("/echo no Food left")
+    yield("/e <se.1>")
+    end
+    if HasStatusId(48) then
+    Foodcheck = 0
+    end
+end
 ---------------------------Notification tab--------------------------------------
 if gems > 1400 and cCount == 0 then
     yield("/e You are Almost capped with ur Bicolor Gems! <se.3>")
@@ -551,6 +579,7 @@ if PathIsRunning() and IsInFate() == true then
     if fateId == 1919 then
         yield("/wait 2.0010")
     end
+    yield("/wait "..fatewait)
     yield("/vnavmesh stop")
     yield("/wait 0.5011")
 end
@@ -585,6 +614,8 @@ if GetCharacterCondition(4) == false and bmaiactive == false then
     if BMR == true then
         yield("/bmrai on")
         yield("/bmrai followtarget on")
+        yield("/bmrai followcombat on")
+        yield("/bmrai followoutofcombat on")
         bmaiactive = true
     end
 end
@@ -605,6 +636,8 @@ if IsInFate() == false and bmaiactive == true then
     if BMR == true then
         yield("/bmrai off")
         yield("/bmrai followtarget off")
+        yield("/bmrai followcombat off")
+        yield("/bmrai followoutofcombat off")
         bmaiactive = false
     end
 end
@@ -614,42 +647,75 @@ while GetCharacterCondition(26) do
 yield("/wait 1.0026")
 end
 --Repair function
-if ManualRepair == true and GetCharacterCondition(4) == false then
+if RepairAmount > 0 and GetCharacterCondition(4) == false then
     if NeedsRepair(RepairAmount) then
     while not IsAddonVisible("Repair") do
     yield("/generalaction repair")
     yield("/wait 0.5012")
     end
-    yield("/pcall Repair true 0")
+    yield("/callback Repair true 0")
     yield("/wait 0.1")
 if IsAddonVisible("SelectYesno") then
-    yield("/pcall SelectYesno true 0")
+    yield("/callback SelectYesno true 0")
     yield("/wait 0.1")
 end
 while GetCharacterCondition(39) do 
     yield("/wait 1.0027") 
 end
     yield("/wait 1.0028")
-    yield("/pcall Repair true -1")
+    yield("/callback Repair true -1")
 end
 end
+
 --Materia Extraction function
 if ExtractMateria == true  and GetCharacterCondition(4) == false then
 if CanExtractMateria(100) then
     yield("/generalaction \"Materia Extraction\"")
     yield("/waitaddon Materialize")
-while CanExtractMateria(100)==true do
+while CanExtractMateria(100) == true do
+    if not IsAddonVisible("Materialize") then
+    yield("/generalaction \"Materia Extraction\"")
+    end
     yield("/pcall Materialize true 2")
-    yield("/wait 0.5013")
+    yield("/wait 0.5")
+if IsAddonVisible("MaterializeDialog") then
+    yield("/pcall MaterializeDialog true 0")
+    yield("/wait 0.1")
+end
 while GetCharacterCondition(39) do
-    yield("/wait 0.5014")
+    yield("/wait 0.5")
 end
 end 
-    yield("/wait 1.0029")
+    yield("/wait 1")
     yield("/pcall Materialize true -1")
     yield("/e Extracted all materia")
-end 
+    yield("/wait 1")
 end
+end
+
+if CanExtractMateria(100) and Extract == true and GetCharacterCondition(27) == false then
+        yield("/generalaction \"Materia Extraction\"")
+        yield("/waitaddon Materialize")
+    while CanExtractMateria(100) == true and GetCharacterCondition(27) == false do
+        if not IsAddonVisible("Materialize") then
+        yield("/generalaction \"Materia Extraction\"")
+        end
+        yield("/pcall Materialize true 2")
+        yield("/wait 0.5")
+    if IsAddonVisible("MaterializeDialog") then
+        yield("/pcall MaterializeDialog true 0")
+        yield("/wait 0.1")
+    end
+    while GetCharacterCondition(39) do
+        yield("/wait 0.5")
+    end
+    end 
+        yield("/wait 1")
+        yield("/pcall Materialize true -1")
+        yield("/e Extracted all materia")
+        yield("/wait 1")
+    end
+
 --Retainer Process
 if Retainers == true and GetCharacterCondition(26) == false then 
     if ARRetainersWaitingToBeProcessed() == true then
@@ -700,11 +766,11 @@ if Retainers == true and GetCharacterCondition(26) == false then
         yield("/waitaddon RetainerList")
         yield("/e Finished processing retainers")
         yield("/wait 1.0039")
-        yield("/pcall RetainerList true -1")
+        yield("/callback RetainerList true -1")
         yield("/wait 1.0040")
         while IsInZone(129) do
         if IsAddonVisible("RetainerList") then
-        yield("/pcall RetainerList true -1")
+        yield("/callback RetainerList true -1")
         end
         if IsAddonVisible("RetainerList") == false then
         yield("/tp "..teleport)
@@ -738,11 +804,11 @@ while GetCharacterCondition(31) == false do
     yield("/wait 1.0044")
 end
 if GetCharacterCondition(31) == true then
-    yield("/pcall ShopExchangeCurrency false 0 5 13") --Change the last number "13" to the amount u want to buy 
+    yield("/callback ShopExchangeCurrency false 0 5 13") --Change the last number "13" to the amount u want to buy 
     yield("/wait 1.0045")
-    yield("/pcall SelectYesno true 0")
+    yield("/callback SelectYesno true 0")
     yield("/wait 1.0046")
-    yield("/pcall ShopExchangeCurrency true -1")
+    yield("/callback ShopExchangeCurrency true -1")
     yield("/wait 1.0047")
     yield("/tp "..teleport)
     yield("/wait 7.0016")
@@ -810,11 +876,11 @@ if IsInZone(1186) then
         end
 
         if IsInZone(1186) and GetCharacterCondition(31) == true and IsAddonVisible("ShopExchangeCurrency") then
-            yield("/pcall ShopExchangeCurrency false 0 5 1") --Change the last number "13" to the amount u want to buy 
+            yield("/callback ShopExchangeCurrency false 0 5 13") --Change the last number "13" to the amount u want to buy 
             yield("/wait 0.5021")
-            yield("/pcall SelectYesno true 0")
+            yield("/callback SelectYesno true 0")
             yield("/wait 0.5022")
-            yield("/pcall ShopExchangeCurrency true -1")
+            yield("/callback ShopExchangeCurrency true -1")
             yield("/wait 1.0055")
             yield("/tp "..teleport)
             yield("/wait 7.0018")
