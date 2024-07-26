@@ -8,9 +8,10 @@
 
   ***********
   * Version *
-  *  0.2.0  *
+  *  0.2.1  *
   ***********
 
+    -> 0.2.1    Fixed game crash caused by checking for the Food status
     -> 0.2.0    Code changes
                     added auto snd property set (sets the snd settings so you don't have to)
                     sets the rsr settings to auto (and aoetype 2) when your on Tank (DRK not included), and on other classes to manual (and aoetype 1) 
@@ -528,8 +529,12 @@ while true do
 gems = GetItemCount(26807)
 
 --food usage
-if not HasStatusId(48) and (Food == "" == false) and Foodcheck <= 10 and GetCharacterCondition(27) == false then
-    while not HasStatusId(48) and (Food == "" == false) and Foodcheck <= 10 and GetCharacterCondition(27) == false do
+if GetCharacterCondition(27) == false and GetCharacterCondition(45) == false then
+if not HasStatusId(48) and (Food == "" == false) and Foodcheck <= 10 and GetCharacterCondition(27) == false and GetCharacterCondition(45) == false then
+    while not HasStatusId(48) and (Food == "" == false) and Foodcheck <= 10 and GetCharacterCondition(27) == false and GetCharacterCondition(45) == false do
+    while GetCharacterCondition(27) == true or GetCharacterCondition(45) == true do
+    yield("/wait 1")
+    end
         yield("/item " .. Food)
         yield("/wait 2")
         Foodcheck = Foodcheck + 1
@@ -541,6 +546,7 @@ if not HasStatusId(48) and (Food == "" == false) and Foodcheck <= 10 and GetChar
     if HasStatusId(48) then
     Foodcheck = 0
     end
+end
 end
 ---------------------------Notification tab--------------------------------------
 if gems > 1400 and cCount == 0 then
