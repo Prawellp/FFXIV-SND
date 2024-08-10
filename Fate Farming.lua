@@ -8,9 +8,15 @@
 
   ***********
   * Version *
-  *  0.2.1  *
+  *  0.2.2  *
   ***********
 
+    -> 0.2.2    Voucher exchange
+                    Removed the target, lockon and move to Aetheryte. causing problems since the new spawn points in S9
+                    Repaths if you get stuck at the counter
+                Rotation Solver
+                    turns auto on every time you enter a fate.
+                Build in "[FATE]" before every echo in chat
     -> 0.2.1    Fixed game crash caused by checking for the Food status
     -> 0.2.0    Code changes
                     added auto snd property set (sets the snd settings so you don't have to)
@@ -137,33 +143,33 @@ yield("/wait 0.5001")
 
 --Required Plugin Warning
 if HasPlugin("vnavmesh") == false then
-    yield("/echo Please Install vnavmesh")
+    yield("/echo [FATE] Please Install vnavmesh")
 end
 if HasPlugin("RotationSolverReborn") == false and HasPlugin("RotationSolver") == false then
-    yield("/echo Please Install Rotation Solver Reborn")
+    yield("/echo [FATE] Please Install Rotation Solver Reborn")
 end
 if HasPlugin("PandorasBox") == false then
-    yield("/echo Please Install Pandora'sBox")
+    yield("/echo [FATE] Please Install Pandora'sBox")
 end
 --Optional Plugin Warning
 if ChangeInstance == true  then
 if HasPlugin("Lifestream") == false then
-    yield("/echo Please Install Lifestream or Disable ChangeInstance in the settings")
+    yield("/echo [FATE] Please Install Lifestream or Disable ChangeInstance in the settings")
 end
 end
 if Retainers == true then
 if HasPlugin("AutoRetainer") == false then
-    yield("/echo Please Install AutoRetainer")
+    yield("/echo [FATE] Please Install AutoRetainer")
 end
 end
 if ExtractMateria == true then
 if HasPlugin("YesAlready") == false then
-    yield("/echo Please Install YesAlready")
+    yield("/echo [FATE] Please Install YesAlready")
 end 
 end   
 if BMR == true then
 if HasPlugin("BossModReborn") == false and HasPlugin("BossMod") == false then
-    yield("/echo Please Install BossMod Reborn")
+    yield("/echo [FATE] Please Install BossMod Reborn")
 end
 end 
 ------------------------------Functions----------------------------------------------
@@ -342,12 +348,12 @@ end
     end
 
     if Announce == 2 then
-    yield("/echo Moving to Fate: "..fateId)  
+    yield("/echo [FATE] Moving to Fate: "..fateId)  
 end
 
 --Announcement for gems
 if gcount == 0  and fateId ~= 0 and Announce == 1 or Announce == 2 then
-    yield("/e Gems: "..gems)
+    yield("/echo [FATE] Gems: "..gems)
     yield("/wait 0.5002")
     gcount = gcount +1
 end
@@ -371,7 +377,7 @@ InstanceCount = 0
 function noFateSafe()
     if noFate == true then
     if fcount == 0 then
-        yield("/echo No Fate existing")
+        yield("/echo [FATE] No Fate existing")
         fcount = fcount +1
     end
 
@@ -515,13 +521,13 @@ end
 
 --vnavmesh building
 if NavIsReady() == false then
-yield("/echo Building Mesh Please wait...")
+yield("/echo [FATE] Building Mesh Please wait...")
 end
 while NavIsReady() == false do
 yield("/wait 1.0022")
 end
 if NavIsReady() then
-yield("/echo Mesh is Ready!")
+yield("/echo [FATE] Mesh is Ready!")
 end
 
 --Start of the Code
@@ -540,8 +546,7 @@ if not HasStatusId(48) and (Food == "" == false) and Foodcheck <= 10 and GetChar
         Foodcheck = Foodcheck + 1
     end
     if Foodcheck >= 10 then
-    yield("/echo no Food left")
-    yield("/e <se.1>")
+    yield("/echo [FATE] no Food left <se.1>")
     end
     if HasStatusId(48) then
     Foodcheck = 0
@@ -550,7 +555,7 @@ end
 end
 ---------------------------Notification tab--------------------------------------
 if gems > 1400 and cCount == 0 then
-    yield("/e You are Almost capped with ur Bicolor Gems! <se.3>")
+    yield("/echo [FATE] You are Almost capped with ur Bicolor Gems! <se.3>")
     yield("/wait 1.0023")
     cCount = cCount +1
 end
@@ -582,6 +587,7 @@ end
 end
 --Stops Pathing when in Fate
 if PathIsRunning() and IsInFate() == true then
+    yield("/rotation auto")
     if fateId == 1919 then
         yield("/wait 2.0010")
     end
@@ -592,7 +598,6 @@ end
 end
 --Path stops when there is no fate 
 if noFate == true and PathIsRunning() or PathfindInProgress() then
-    PathStop()
     yield("/vnavmesh stop")
     yield("/wait 2.0011")
 end
@@ -694,7 +699,7 @@ end
 end 
     yield("/wait 1")
     yield("/pcall Materialize true -1")
-    yield("/e Extracted all materia")
+    yield("/echo [FATE] Extracted all materia")
     yield("/wait 1")
 end
 end
@@ -718,7 +723,7 @@ if CanExtractMateria(100) and Extract == true and GetCharacterCondition(27) == f
     end 
         yield("/wait 1")
         yield("/pcall Materialize true -1")
-        yield("/e Extracted all materia")
+        yield("/echo [FATE] Extracted all materia")
         yield("/wait 1")
     end
 
@@ -759,7 +764,7 @@ if Retainers == true and GetCharacterCondition(26) == false then
         yield("/interact")
         if IsAddonVisible("RetainerList") then
         yield("/ays e")
-        yield("/echo processing retainers")
+        yield("/echo [FATE] Processing retainers")
         yield("/wait 1.0036")
         end
         end
@@ -770,7 +775,7 @@ if Retainers == true and GetCharacterCondition(26) == false then
 
         yield("/wait 1.0038")
         yield("/waitaddon RetainerList")
-        yield("/e Finished processing retainers")
+        yield("/echo [FATE] Finished processing retainers")
         yield("/wait 1.0039")
         yield("/callback RetainerList true -1")
         yield("/wait 1.0040")
@@ -827,10 +832,10 @@ end
 
 --new Vouchers!
 if gems > 1400 and Exchange == true and OldV == false then
-    while not IsInZone(1186) do
+while not IsInZone(1186) do
     yield("/tp Solution Nine")
     yield("/wait 7.0017")
-    
+        
     while GetCharacterCondition(45) == true do
         yield("/wait 0.5017")
     end
@@ -838,26 +843,16 @@ end
 if IsInZone(1186) then
 
     while IsPlayerAvailable() == false or NavIsReady() == false do
-    yield("/wait 1.0049")
-    end
-
-    if PathIsRunning() == false or PathfindInProgress() == false then
-    yield("/target Aetheryte")
-    yield("/lockon")
-    yield("/automove")
-    end
-
-    while GetDistanceToTarget() > 11 do
-    yield("/wait 0.5018")
+        yield("/wait 1.0049")
     end
 
     while GetCharacterCondition(45) == false do
-    yield("/li Nexus Arcade")
-    yield("/wait 2.0014")
+        yield("/li Nexus Arcade")
+        yield("/wait 2.0014")
     end
 
     while GetCharacterCondition(45) == true or GetCharacterCondition(32) == true do
-    yield("/wait 1.0050")
+        yield("/wait 1.0050")
     end
 
     if IsPlayerAvailable() == true and GetCharacterCondition(45) == false or GetCharacterCondition(32) == false then
@@ -868,33 +863,38 @@ if IsInZone(1186) then
 
     while PathIsRunning() == true or PathfindInProgress() == true do
         yield("/wait 1.0053")
+        while GetDistanceToPoint(-198.466, 0.922, -6.955) > 10 and GetDistanceToPoint(-198.466, 0.922, -6.955) < 15 do
+            PathfindAndMoveTo(-198.466, 0.922, -6.955)
+            yield("/echo [FATE] Repathing")
+            yield("/wait 1")
+        end
     end
 
     if IsInZone(1186) and PathIsRunning() == false or PathfindInProgress() == false then
         yield("/target Beryl")
         yield("/wait 0.5019")
-        
+            
         while IsInZone(1186) and not IsAddonVisible("ShopExchangeCurrency") do
-        yield("/interact")
-        yield("/wait 0.5020")
-        yield("/click Talk Click")
-        yield("/wait 1.0054")
+            yield("/interact")
+            yield("/wait 0.5020")
+            yield("/click Talk Click")
+            yield("/wait 1.0054")
         end
 
         if IsInZone(1186) and GetCharacterCondition(31) == true and IsAddonVisible("ShopExchangeCurrency") then
-            yield("/callback ShopExchangeCurrency false 0 5 13") --Change the last number "13" to the amount u want to buy 
-            yield("/wait 0.5021")
-            yield("/callback SelectYesno true 0")
-            yield("/wait 0.5022")
-            yield("/callback ShopExchangeCurrency true -1")
-            yield("/wait 1.0055")
-            yield("/tp "..teleport)
-            yield("/wait 7.0018")
-        while GetCharacterCondition(45) do
-            yield("/wait 1.0056")
+                yield("/callback ShopExchangeCurrency false 0 5 13") --Change the last number "13" to the amount u want to buy 
+                yield("/wait 0.5021")
+                yield("/callback SelectYesno true 0")
+                yield("/wait 0.5022")
+                yield("/callback ShopExchangeCurrency true -1")
+                yield("/wait 1.0055")
+                yield("/tp "..teleport)
+                yield("/wait 7.0018")
+            while GetCharacterCondition(45) do
+                yield("/wait 1.0056")
         end
-end
-end
-end
+    end
+    end
+    end
 end
 end
