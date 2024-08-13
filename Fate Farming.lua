@@ -4,13 +4,14 @@
   *            Fate Farming              * 
   ****************************************
 
-  Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9
+  Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, Caladbol (v0.2.3)
 
   ***********
   * Version *
-  *  0.2.2  *
+  *  0.2.3  *
   ***********
 
+    -> 0.2.3    Update the rsr enable when in a FATE to use the job validation logic. This will prevent DPS from aggroing too many mobs.
     -> 0.2.2    Voucher exchange
                     Removed the target, lockon and move to Aetheryte. causing problems since the new spawn points in S9
                     Repaths if you get stuck at the counter
@@ -33,25 +34,6 @@
                     Reordert the settings and named some categorys
                     BMR will now be default set to true
                     added food usage
-    -> 0.1.9.1  fixed Click Talk for the Vouchers
-    -> 0.1.9    Fixed running into Aetherytes when trying to change instace.
-                    ->Will also loop back to the first instance after no fates found in third instance.
-                    ->In SND settings under /target turn off Stop macro if not found setting.
-                    ->In SND settings under /waitaddon turn off both settings.
-                Stopped it from mounting at the start till a fate is found so you don't mount jump then unmount if there are no fates.
-                Added names of fates to blacklist.
-    -> 0.1.8.1  got rid of uneeded echo messages
-    -> 0.1.8    teleport to closest aethyrite for fates.
-    -> 0.1.7:   added a new testing feature where you can test stuff that may change other stuff or even be added if enough Positive feedback is given and no bug happening
-                    ->added new settings for it
-                    ->added testing for instance change
-                added new Optional Plugin "Simple Tweaks Plugin"
-                    -> needed for the new Vouchers
-                    -> needed for Testing
-                added new setting "CompletionToIgnoreFate"
-                    -> will skip fates that have above the given number of completion Percentage
-                added numbers behind the waits for better Debugging so when Reporting something because your stuck please Provide the wait time where its stuck
-
 
 *********************
 *  Required Plugins *
@@ -360,6 +342,19 @@ end
 end
 end
 
+--Enable rotation based on the current job
+function enableRotation()
+    Class = GetClassJobId()
+    if Class ~= 21 or Class ~= 37 or Class ~= 19 then
+    yield("/rotation manual")
+    yield("/rotation settings aoetype 1")
+    end
+    if Class == 21 or Class == 37 or Class == 19 then
+    yield("/rotation auto")
+    yield("/rotation settings aoetype 2")
+    end
+end
+
 --Paths to the enemy (for Meele)
 function enemyPathing()
     while GetDistanceToTarget() > 3.5 do
@@ -509,15 +504,7 @@ setSNDProperty("StopMacroIfAddonNotFound", false)
 setSNDProperty("StopMacroIfAddonNotVisible", false)
 
 
-Class = GetClassJobId()
-if Class ~= 21 or Class ~= 37 or Class ~= 19 then
-yield("/rotation manual")
-yield("/rotation settings aoetype 1")
-end
-if Class == 21 or Class == 37 or Class == 19 then
-yield("/rotation auto")
-yield("/rotation settings aoetype 2")
-end
+enableRotation()
 
 --vnavmesh building
 if NavIsReady() == false then
@@ -587,7 +574,7 @@ end
 end
 --Stops Pathing when in Fate
 if PathIsRunning() and IsInFate() == true then
-    yield("/rotation auto")
+    enableRotation()
     if fateId == 1919 then
         yield("/wait 2.0010")
     end
