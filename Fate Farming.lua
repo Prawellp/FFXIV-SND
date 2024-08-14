@@ -8,9 +8,17 @@
 
   ***********
   * Version *
-  *  0.2.3  *
+  *  0.2.4  *
   ***********
 
+    -> 0.2.4    Code changes
+                    added revive upon death (requires "teleport" to be set in the settings)
+                    added GC turn ins
+                Setting changes
+                    added the category Retainer
+                    added 2 new settings for it in the Retainer settings
+                Plugin changes
+                    added Deliveroo in Optional Plugins for turn ins
     -> 0.2.3    Code changes
                     forgot the rotation settings in the last update to change it based on your job when entering a fate (thanks Caladbol)
                     Removed the numbers behind the wait because im to lazy to update them and check wich i need
@@ -37,7 +45,7 @@
                     Reordert the settings and named some categorys
                     BMR will now be default set to true
                     added food usage
-    -> 0.1.9.1  fixed Click Talk for the Vouchers
+
 
 *********************
 *  Required Plugins *
@@ -61,6 +69,7 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
     -> Teleporter :  (for Teleporting to aetherytes [teleport][Exchange][Retainers])
     -> Lifestream :  (for chaning Instances [ChangeInstance][Exchange]) https://raw.githubusercontent.com/NightmareXIV/MyDalamudPlugins/main/pluginmaster.json
     -> AutoRetainer : (for Retainers [Retainers])   https://love.puni.sh/ment.json
+    -> Deliveroo : (for gc turn ins [TurnIn])   https://plugins.carvel.li/
     -> Bossmod Reborn : (for AI dodging [BMR])  https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json
         -> make sure to set the Max distance in the AI Settings to the desired distance (25 is to far for Meeles)
 
@@ -92,8 +101,12 @@ ExtractMateria = true      --should it Extract Materia
 Food = ""                  --Leave "" Blank if you don't want to use any food
                            --if its HQ include <hq> next to the name "Baked Eggplant <hq>"
 
---Other stuff
+--Retainer
 Retainers = false          --should it do Retainers
+TurnIn = false             --should it to Turn ins at the GC
+slots = 5                  --how much inventory space before turning in
+
+--Other stuff
 ChocoboS = true            --should it Activate the Chocobo settings in Pandora (to summon it)
 Announce = 2
 --Change this value for how much echos u want in chat 
@@ -532,6 +545,37 @@ stuck = 0
 end
 end
 
+function Death()
+if GetCharacterCondition(2) then --Condition Dead
+while not IsAddonVisible("SelectYesno") do --rez addon wait
+yield("/wait 1")
+end
+
+if IsAddonVisible("SelectYesno") then --rez addon yes
+    yield("/callback SelectYesno true 0")
+    yield("/wait 0.1")
+end
+
+while GetCharacterCondition(45) do --wait between areas
+    yield("/wait 1")
+end
+
+while GetCharacterCondition(2) do --wait till alive
+yield("/wait 1")
+end
+
+yield("/tp "..teleport) --teleport
+yield("/wait 7")
+
+while GetCharacterCondition(45) do --wait between areas
+    yield("/wait 1")
+end
+end
+
+end
+
+
+
 ---------------------------Beginning of the Code------------------------------------
 gcount = 0
 cCount = 0
@@ -585,6 +629,7 @@ if IsPlayerAvailable() then
 FateLocation()
 FatePath()
 noFateSafe()
+Death()
 end
 
 Fate1 = fateId
@@ -656,6 +701,7 @@ if GetCharacterCondition(4) == false and bmaiactive == false then
         bmaiactive = true
     end
 end
+
 --Paths to enemys when Bossmod is disabled
     if BMR == false then 
     enemyPathing()
@@ -666,6 +712,7 @@ end
     gcount = 0
     cCount = 0
     antistuck()
+    Death()
 end
 
 --Disables bossmod when the fate is over
@@ -808,18 +855,36 @@ if Retainers == true and GetCharacterCondition(26) == false then
         while IsInZone(129) do
         if IsAddonVisible("RetainerList") then
         yield("/callback RetainerList true -1")
+        yield("/wait 1")
         end
-        if IsAddonVisible("RetainerList") == false then
+
+        --Deliveroo
+        if GetInventoryFreeSlotCount() < slots and TurnIn == true then
+            yield("/li gc")
+            end
+            while DeliverooIsTurnInRunning() == false do
+                yield("/wait 1")
+                yield("/deliveroo enable")
+            end
+            if DeliverooIsTurnInRunning() then
+            yield("/vnav stop")
+            end
+            while DeliverooIsTurnInRunning() do
+                yield("/wait 1")
+            end
+        end
+
         yield("/tp "..teleport)
         yield("/wait 7")
-        end
-        end
+
         while GetCharacterCondition(45) do
             yield("/wait 1")
         end
         yield("/wait 1")
     end
 end
+
+
 ------------------------------Vouchers-----------------------------------------------
 --old Vouchers!
 if gems > 1400 and Exchange == true and OldV == true then
