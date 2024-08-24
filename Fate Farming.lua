@@ -613,7 +613,13 @@ function ChangeInstance()
                 end
             end
             yield("/tp "..closestAetheryte.aetheryteName)
-            yield("/wait 7")
+            
+            while GetCharacterCondition(CharacterCondition.transition) do
+                yield("/wait 1")
+            end
+
+            yield("/target Aetheryte")
+            yield("/wait 1")
         end
 
         yield("/lockon")
@@ -635,8 +641,6 @@ function ChangeInstance()
             yield("/vnavmesh stop")
             yield("/gaction dismount")
 
-
-
         if not GetCharacterCondition(CharacterCondition.transition) then
             yield("/wait 0.5")
             yield("/li "..CurrentInstance+1)
@@ -644,15 +648,12 @@ function ChangeInstance()
             CurrentInstance = (CurrentInstance + 1) % 3
         end
 
-        if not GetCharacterCondition(CharacterCondition.transition) and IsPlayerAvailable() then
-            CurrentFate = SelectNextFate()
-            yield("/lockon off")
-            yield("/automove off")
+        while GetCharacterCondition(CharacterCondition.transition) do
+            CodeWait(1)
         end
-
-        if GetCharacterCondition(CharacterCondition.transition) then
-            yield("/wait 1")
-        end
+        CurrentFate = SelectNextFate()
+        yield("/lockon off")
+        yield("/automove off")
     end
 end
 
@@ -819,7 +820,7 @@ while true do
 
     ---------------------------Notification tab--------------------------------------
     if gems > 1400 and cCount == 0 then
-        yield("/echo [FATE] You are Almost capped with ur Bicolor Gems! <se.3>")
+        yield("/echo [FATE] You are almost capped with ur Bicolor Gems! <se.3>")
         yield("/wait 1")
         cCount = cCount +1
     end
@@ -865,11 +866,11 @@ while true do
         --Stops Moving to dead Fates or change paths to better fates
         NextFate = SelectNextFate()
         if NextFate == nil then --Path stops when there is no fate 
-            yield("/echo stopped pathing, there is no fate")
+            yield("/echo [FATE] Stopped pathing, cannot find fate.")
             yield("/vnavmesh stop")
             yield("/wait 2")
         elseif CurrentFate.fateId ~= NextFate.fateId then
-            yield("/echo better fate found, stopping pathing")
+            yield("/echo [FATE] Stopped pathing, higher priority fate found: #"..NextFate.fateId.." "..NextFate.name)
             yield("/vnavmesh stop")
             yield("/wait 0.5")
             if not PathIsRunning() then
@@ -887,7 +888,7 @@ while true do
             PromptRSR()
         end
     end
-    yield("/echo arrived at fate")
+    LogInfo("[FATE] Arrived at fate #"..CurrentFate.fateId.." "..CurrentFate.name)
 
     --Dismounting upon arriving at fate
     while GetCharacterCondition(CharacterCondition.mounted) and (IsInFate() or CurrentFate.startTime == 0) do
