@@ -92,19 +92,19 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 --false = no
 
 --Teleport and Voucher
-teleport = "Electrope Strike"     --Enter the name of the Teleporter where youu farm Fates so it teleport back to the area and keeps farming
+teleport = "Electrope Strike"   --Enter the name of the Teleporter where youu farm Fates so it teleport back to the area and keeps farming
 ChangeInstance = true      --should it Change Instance when there is no Fate (only works on DT fates)
 Exchange = false           --should it Exchange Vouchers
 OldV = false               --should it Exchange Old Vouchers
 
 --Fate settings
-WaitIfBonusBuff = true             --Don't change instances if you have the Twist of Fate bonus buff
-CompletionToIgnoreFate = 80 --Percent above which to ignore fate
-MinTimeLeftToIgnoreFate = 5*60 --Seconds below which to ignore fate
-JoinBossFatesIfActive = true --Join boss fates if someone is already working on it (to avoid soloing long boss fates). If false, avoid boss fates entirely.
-CompletionToJoinBossFate = 40 --Percent above which to join boss fate
-fatewait = 0               --the amount how long it should when before dismounting (0 = at the beginning of the fate 3-5 = should be in the middle of the fate)
-useBMR = true                 --if you want to use the BossMod dodge/follow mode
+WaitIfBonusBuff = true          --Don't change instances if you have the Twist of Fate bonus buff
+CompletionToIgnoreFate = 80     --Percent above which to ignore fate
+MinTimeLeftToIgnoreFate = 5*60  --Seconds below which to ignore fate
+JoinBossFatesIfActive = true    --Join boss fates if someone is already working on it (to avoid soloing long boss fates). If false, avoid boss fates entirely.
+CompletionToJoinBossFate = 40   --Percent above which to join boss fate
+fatewait = 0                    --the amount how long it should when before dismounting (0 = at the beginning of the fate 3-5 = should be in the middle of the fate)
+useBMR = true                   --if you want to use the BossMod dodge/follow mode
 
 
 --Utilities
