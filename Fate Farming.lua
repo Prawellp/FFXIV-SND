@@ -16,6 +16,7 @@
                         - WaitIfBonusBuff
                         - MinTimeLeftToIgnoreFate
                         - JoinBossFatesIfActive
+                        - CompletionToJoinBossFate
                     enabled non-collection fates that require interacting with an npc to start
                     [dev] rework of internal fate lists, aetheryte lists, character statuses
     -> 0.2.4    Code changes
@@ -391,6 +392,33 @@ function EorzeaTimeToUnixTime(eorzeaTime)
     return eorzeaTime/(144/7) -- 24h Eorzea Time equals 70min IRL
 end
 
+--[[
+    Given two fates, picks the better one based on priority progress -> is bonus -> time left -> distance
+]]
+function SelectNextFateHelper(tempFate, nextFate)
+    if nextFate == nil then
+        return tempFate
+    elseif tempFate.progress > nextFate.progress then
+        return tempFate
+    elseif tempFate.progress == nextFate.progress then
+        if nextFate.isBonusFate and tempFate.isBonusFate then
+            if tempFate.timeLeft < nextFate.timeLeft then
+                return tempFate
+            elseif tempFate.timeLeft ==  nextFate.timeLeft then
+                if tempFate.playerDistance < nextFate.playerDistance then
+                    LogInfo("[FATE] Fate #"..tempFate.fateId.." "..tempFate.name.." has distance of "..tempFate.playerDistance)
+                    return tempFate
+                end
+            end
+        elseif nextFate.isBonusFate then
+            return nextFate
+        elseif tempFate.isBonusFate then
+            return tempFate
+        end
+    end
+    return nextFate
+end
+
 --Gets the Location of the next Fate. Prioritizes anything with progress above 0, then by shortest time left
 function SelectNextFate()
     local fates = GetActiveFates()
@@ -406,7 +434,6 @@ function SelectNextFate()
             x = GetFateLocationX(fates[i]),
             y = GetFateLocationY(fates[i]),
             z = GetFateLocationZ(fates[i]),
-            isBossFate = IsBossFate(fates[i]),
             isBonusFate = GetFateIsBonus(fates[i]),
             fateNpc = GetFateNpc(fateID)
         }
@@ -422,82 +449,26 @@ function SelectNextFate()
         end
         LogInfo("[FATE] Time left on fate #:"..tempFate.fateId..": "..math.floor(tempFate.timeLeft//60).."min, "..math.floor(tempFate.timeLeft%60).."s")
         
+        
         if IsCollectionsFate(tempFate.fateId) then -- skip collections fates
             LogInfo("[FATE] Skipping fate #"..tempFate.fateId.." "..tempFate.name.." due to being collections fate.")
         elseif not IsBlackListed(tempFate.fateId) then -- check fate is not blacklisted for any reason
             if IsNonCollectionsNpcFate(tempFate.fateId) then
-                if tempFate.duration > 0 and (nextFate == nil or not nextFate.isBonusFate) then -- if someone already opened this fate, then treat is as all the other fates
-                    if tempFate.isBonusFate then
-                        LogInfo("[FATE] Selecting fate #"..tempFate.fateId.." "..tempFate.name.." due to bonus.")
-                        nextFate = tempFate
-                    else
-                        if nextFate == nil then
-                            nextFate = tempFate
-                        elseif tempFate.progress > nextFate.progress then
-                            nextFate = tempFate
-                        elseif tempFate.progress == nextFate.progress then
-                            if tempFate.timeLeft < nextFate.timeLeft then
-                                nextFate = tempFate
-                            elseif tempFate.timeLeft ==  nextFate.timeLeft then
-                                if tempFate.playerDistance < nextFate.playerDistance then
-                                    LogInfo("[FATE] Fate #"..tempFate.fateId.." "..tempFate.name.." has distance of "..tempFate.playerDistance)
-                                    nextFate = tempFate
-                                end
-                            end
-                        end
-                    end
+                if tempFate.duration > 0 then -- if someone already opened this fate, then treat is as all the other fates
+                    nextFate = SelectNextFateHelper(tempFate, nextFate)
                 else -- no one has opened this fate yet
-                    if (nextFate == nil or not nextFate.isBonusFate) then
-                        if tempFate.isBonusFate then
-                            LogInfo("[FATE] Selecting fate #"..tempFate.fateId.." "..tempFate.name.." due to bonus.")
-                            nextFate = tempFate
-                        elseif nextFate == nil then
-                            nextFate = tempFate
-                        elseif nextFate.progress == 0 and nextFate.timeLeft >= 900 and tempFate.playerDistance < nextFate.playerDistance then -- no other fates have progress or have timers counting down
-                            LogInfo("[FATE] Fate #"..tempFate.fateId.." "..tempFate.name.." has distance of "..tempFate.playerDistance)
-                            nextFate = tempFate
-                        end
+                    if nextFate == nil then -- pick this if there's nothing else
+                        nextFate = tempFate
+                    elseif tempFate.isBonusFate or (nextFate.progress == 0 and nextFate.duration == 900) then -- both fates are npc fates
+                        nextFate = SelectNextFateHelper(tempFate, nextFate)
                     end
                 end
-            elseif tempFate.timeLeft > MinTimeLeftToIgnoreFate and tempFate.progress < CompletionToIgnoreFate then -- else is normal fate
-                yield("/echo Norrmal fate: "..tempFate.fateId.." "..tempFate.name)
-                if not tempFate.isBossFate or (JoinBossFatesIfActive and tempFate.progress >= CompletionToJoinBossFate) and (nextFate == nil or not nextFate.isBonusFate) then
-                    if tempFate.isBonusFate then
-                        LogInfo("[FATE] Selecting fate #"..tempFate.fateId.." "..tempFate.name.." due to bonus.")
-                        nextFate = tempFate
-                    elseif nextFate == nil then
-                        nextFate = tempFate
-                    elseif tempFate.progress > nextFate.progress then
-                        nextFate = tempFate
-                    elseif tempFate.progress == nextFate.progress then
-                        if tempFate.timeLeft < nextFate.timeLeft then
-                            nextFate = tempFate
-                        elseif tempFate.timeLeft ==  nextFate.timeLeft and tempFate.playerDistance < tempFate.playerDistance then
-                            LogInfo("[FATE] Fate #"..tempFate.fateId.." "..tempFate.name.." has distance of "..distance)
-                            nextFate = tempFate
-                        end
-                    end
-                elseif tempFate.isBossFate then
-                    if JoinBossFatesIfActive and tempFate.progress >= CompletionToJoinBossFate then --join if someone else is also working on this fate
-                        if tempFate.isBonusFate then
-                            LogInfo("[FATE] Selecting fate #"..tempFate.fateId.." "..tempFate.name.." due to bonus.")
-                            nextFate = tempFate
-                        else
-                            if nextFate == nil then
-                                nextFate = tempFate
-                            elseif tempFate.progress > nextFate.progress then
-                                nextFate = tempFate
-                            elseif tempFate.progress == nextFate.progress then
-                                if tempFate.timeLeft < nextFate.timeLeft then
-                                    nextFate = tempFate
-                                elseif tempFate.timeLeft ==  nextFate.timeLeft and distance < minDistance then
-                                    LogInfo("[FATE] Fate #"..tempFate.fateId.." "..tempFate.name.." has distance of "..distance)
-                                    nextFate = tempFate
-                                end
-                            end
-                        end
-                    end
+            elseif IsBossFate(tempFate.fateId) then
+                if endJoinBossFatesIfActive and tempFate.progress >= CompletionToJoinBossFate then
+                    nextFate = SelectNextFateHelper(tempFate, nextFate)
                 end
+            else -- else is normal fate
+                nextFate = SelectNextFateHelper(tempFate, nextFate)
             end
             LogInfo("[FATE] Finished considering fate #"..tempFate.fateId.." "..tempFate.name)
         end
@@ -506,8 +477,10 @@ function SelectNextFate()
     LogInfo("[FATE] Finished considering all fates")
 
     if nextFate == nil then
+        LogInfo("[FATE] No available fates found.")
         yield("/echo [FATE] No available fates found.")
     else
+        LogInfo("[FATE] Final selected fate #"..nextFate.fateId.." "..nextFate.name)
         yield("/echo [FATE] Selected fate #"..nextFate.fateId.." "..nextFate.name)
     end
     yield("/wait 1")
