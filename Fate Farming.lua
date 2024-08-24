@@ -211,7 +211,10 @@ CharacterCondition = {
     mounted=4,
     inCombat=26,
     casting=27,
-    occupied={ 31, 32, 33, 39 },
+    occupied31=31,
+    occupied32=32,
+    occupied=33,
+    occupied39=39,
     transition=45,
     flying=77
 }
