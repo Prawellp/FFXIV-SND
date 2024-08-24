@@ -237,7 +237,7 @@ NonCollectionFatesWithNpc = {
     { fateId=1916, npcName="Unlost Sentry GX", x=-484.6, y=-5.7, z=626.9},  -- Canal Carnage
     { fateId=1920, npcName="The Grand Marshal", x=711.5, y=7.7, z=650.5 },  -- Mascot March
     { fateId=1942, npcName="Novice Hunter", x=408.7956, y=78.64982, z=-407.6445 },          -- It's Super Defective
-    { fateId=1943, npcName="Novice Hunter", x=0, y=0, z=0 },                                -- Running of the Katobleps
+    { fateId=1943, npcName="Novice Hunter", x=529.0959, y=80.72841, z=-225.3374 },                             -- Running of the Katobleps
     { fateId=1945, npcName="Imperiled Hunter", x=207.6147, y=100.027725, z=66.86777 },      -- Ware the Wolves
     { fateId=1950, npcName="Perplexed Reforger", x=-416.2661, y=38.563328, z=-294.5882 },   -- Domo Arigato
     { fateId=1952, npcName="Driftdowns Reforger", x=9.3, y=14.8, z=0 },                     -- Old Stampeding Grounds
@@ -571,25 +571,44 @@ end
 function InteractWithFateNpc(target)
     yield("/vnavmesh stop")
     LogInfo("[FATE] Moving to fate NPC at X:"..target.x..", Y:"..target.y..", Z:"..target.z)
-    yield("/echo [FATE] Moving to fate NPC at X:"..target.x..", Y:"..target.y..", Z:"..target.z)
     PathfindAndMoveTo(target.x, target.y, target.z)
     LogInfo("[FATE] Finished moving to fate NPC")
-    yield("/echo [FATE] Finished moving to fate NPC")
     yield("/target "..target.npcName)
-    yield("/echo [FATE] targetting NPC")
-    repeat
-        CodeWait(1)
-    until GetDistanceToTarget() < 7
-    LogInfo("[FATE] Arrived at fate NPC")
+    yield("/wait 1")
+
+    while not HasTarget() do
+        PathfindAndMoveTo(target.x, target.y, target.z)
+        yield("/target "..target.npcName)
+        yield("/wait 1")
+    end
+
+    LogDebug("[FATE] Found fate NPC "..target.npcName..". Current distance: "..DistanceBetween(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), target.x, target.y, target.z))
+
+    yield("/lockon")
+    yield("/automove")
+
+    while GetDistanceToTarget() > 15 do
+        LogDebug("[FATE] Too far from Fate NPC "..target.npcName..". Current distance: "..DistanceBetween(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), target.x, target.y, target.z))
+        yield("/wait 0.5")
+        if not IsMoving() then
+            if GetTargetName() == target.npcName then
+                yield("/target "..target.npcName)
+                yield("/lockon")
+            end
+            yield("/automove")
+        end
+    end
+
+    LogDebug("[FATE] Arrived at Fate NPC "..target.npcName..". Current distance: "..DistanceBetween(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), target.x, target.y, target.z))
     yield("/wait 1")
     yield("/interact")
-    yield("/echo [FATE] interacted")
+    LogDebug("[FATE] Triggered interact with "..target.npcName..".")
     yield("/wait 1")
     if IsAddonVisible("SelectYesno") then
         yield("/callback SelectYesno true 0")
         yield("/wait 0.1")
     end
-    LogInfo("[FATE] Finished TargetedInteract")
+    LogInfo("[FATE] Exiting InteractWithFateNpc")
 end
 
 --Paths to the enemy (for Meele)
@@ -643,7 +662,7 @@ function ChangeInstance()
         yield("/automove")
         while GetDistanceToTarget() > 15 do
             yield("/wait 0.5")
-            if IsMoving() == false then
+            if not IsMoving() then
                 if GetTargetName() == "Aetheryte" then
                     yield("/target Aetheryte")
                     yield("/lockon")
@@ -916,12 +935,10 @@ while true do
         yield("/wait 0.3")
         antistuck()
     end
-    yield("/echo [FATE] Finished dismounting")
 
-    -- if CurrentFate.startTime == 0 then -- need to talk to npc to start fate
-    --     yield("/echo [FATE] Speaking to fate NPC "..CurrentFate.fateNpc.npcName)
-    --     InteractWithFateNpc(CurrentFate.fateNpc)
-    -- end
+    if CurrentFate.startTime == 0 then -- need to talk to npc to start fate
+        InteractWithFateNpc(CurrentFate.fateNpc)
+    end
 
     -------------------------------Engage Fate Combat--------------------------------------------
     --Dismounts when in fate
