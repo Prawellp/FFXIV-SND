@@ -101,9 +101,9 @@ OldV = false               --should it Exchange Old Vouchers
 --Fate settings
 WaitIfBonusBuff = true          --Don't change instances if you have the Twist of Fate bonus buff
 CompletionToIgnoreFate = 80     --Percent above which to ignore fate
-MinTimeLeftToIgnoreFate = 5*60  --Seconds below which to ignore fate
+MinTimeLeftToIgnoreFate = 14.5*60  --Seconds below which to ignore fate
 JoinBossFatesIfActive = true    --Join boss fates if someone is already working on it (to avoid soloing long boss fates). If false, avoid boss fates entirely.
-CompletionToJoinBossFate = 40   --Percent above which to join boss fate
+CompletionToJoinBossFate = 20   --Percent above which to join boss fate
 fatewait = 0                    --the amount how long it should when before dismounting (0 = at the beginning of the fate 3-5 = should be in the middle of the fate)
 useBMR = true                   --if you want to use the BossMod dodge/follow mode
 
@@ -293,6 +293,7 @@ function IsNonCollectionsNpcFate(fateID)
 end
 
 function GetFateNpc(fateID)
+    yield("/echo Entered GetFateNpc function")
     for index, value in ipairs(NonCollectionFatesWithNpc) do
         if value.fateId == fateID then
             return value
@@ -365,7 +366,7 @@ Zones = {
 }
 
 function TeleportToClosestAetheryteToFate(playerPosition, nextFate)
-    teleportTimePenalty = 150000 -- arbitrary amount to account for how long teleport takes you
+    teleportTimePenalty = 500000 -- to account for how long teleport takes you
 
     local aetheryteForClosestFate = nil
     local closestTravelDistance = DistanceBetween(nextFate.x, nextFate.y, nextFate.z, playerPosition.x, playerPosition.y, playerPosition.z)
@@ -396,46 +397,53 @@ end
     Given two fates, picks the better one based on priority progress -> is bonus -> time left -> distance
 ]]
 function SelectNextFateHelper(tempFate, nextFate)
-    if nextFate == nil then
-        LogInfo("[FATE] Selecting #"..tempFate.fateId.." because no other options so far.")
-        return tempFate
-    elseif nextFate.duration == 0 and tempFate.duration > 0 then -- nextFate is an unopened npc fate
-        LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." is an unopened npc fate.")
-        return tempFate
-    else -- select based on progress
-        if tempFate.progress > nextFate.progress then
-            LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." has less progress.")
+    
+    if tempFate.timeLeft < MinTimeLeftToIgnoreFate then
+        return nextFate
+    else
+        if nextFate == nil then
+                LogInfo("[FATE] Selecting #"..tempFate.fateId.." because no other options so far.")
+                return tempFate
+        elseif nextFate.startTime == 0 and tempFate.startTime > 0 then -- nextFate is an unopened npc fate
+            LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." is an unopened npc fate.")
             return tempFate
-        elseif tempFate.progress < nextFate.progress then
-            LogInfo("[FATE] Selecting #"..nextFate.fateId.." because other fate #"..tempFate.fateId.." has less progress.")
+        elseif tempFate.startTime == 0 and nextFate.startTime > 0 then -- tempFate is an unopened npc fate
             return nextFate
-        elseif tempFate.progress == nextFate.progress then
-            if nextFate.isBonusFate and tempFate.isBonusFate then
-                if tempFate.timeLeft < nextFate.timeLeft then -- select based on time left
-                    LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." has more time left.")
-                    return tempFate
-                elseif tempFate.timeLeft > nextFate.timeLeft then
-                    LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." has more time left.")
-                    return nextFate
-                elseif tempFate.timeLeft ==  nextFate.timeLeft then
-                    if tempFate.playerDistance < nextFate.playerDistance then
-                        LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." is farther.")
+        else -- select based on progress
+            if tempFate.progress > nextFate.progress then
+                LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." has less progress.")
+                return tempFate
+            elseif tempFate.progress < nextFate.progress then
+                LogInfo("[FATE] Selecting #"..nextFate.fateId.." because other fate #"..tempFate.fateId.." has less progress.")
+                return nextFate
+            elseif tempFate.progress == nextFate.progress then
+                if nextFate.isBonusFate and tempFate.isBonusFate then
+                    if tempFate.timeLeft < nextFate.timeLeft then -- select based on time left
+                        LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." has more time left.")
                         return tempFate
-                    elseif tempFate.playerDistance > nextFate.playerDistance then
-                        LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." is farther.")
-                        return tempFate
-                    else
-                        if tempFate.fateId < nextFate.fateId then
+                    elseif tempFate.timeLeft > nextFate.timeLeft then
+                        LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." has more time left.")
+                        return nextFate
+                    elseif tempFate.timeLeft ==  nextFate.timeLeft then
+                        if tempFate.playerDistance < nextFate.playerDistance then
+                            LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." is farther.")
+                            return tempFate
+                        elseif tempFate.playerDistance > nextFate.playerDistance then
+                            LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." is farther.")
                             return tempFate
                         else
-                            return nextFate
+                            if tempFate.fateId < nextFate.fateId then
+                                return tempFate
+                            else
+                                return nextFate
+                            end
                         end
                     end
+                elseif nextFate.isBonusFate then
+                    return nextFate
+                elseif tempFate.isBonusFate then
+                    return tempFate
                 end
-            elseif nextFate.isBonusFate then
-                return nextFate
-            elseif tempFate.isBonusFate then
-                return tempFate
             end
         end
     end
@@ -458,7 +466,7 @@ function SelectNextFate()
             y = GetFateLocationY(fates[i]),
             z = GetFateLocationZ(fates[i]),
             isBonusFate = GetFateIsBonus(fates[i]),
-            fateNpc = GetFateNpc(fateID)
+            fateNpc = GetFateNpc(fates[i])
         }
         tempFate.playerDistance = GetDistanceToPoint(tempFate.x, tempFate.y, tempFate.z)
         LogInfo("[FATE] Considering fate #"..tempFate.fateId.." "..tempFate.name)
@@ -466,6 +474,10 @@ function SelectNextFate()
         local currentTime = EorzeaTimeToUnixTime(GetCurrentEorzeaTimestamp())
         if tempFate.startTime == 0 then
             tempFate.timeLeft = 900
+            if pcall(function () yield("/echo [FATE] NPC for fate #"..tempFate.fateId.." "..tempFate.name.." is "..tempFate.fateNpc.npcName) end) then
+            else
+                yield("/echo [FATE] Cannot find NPC for fate #"..tempFate.fateId.." "..tempFate.name)
+            end
         else
             tempFate.timeElapsed = currentTime - tempFate.startTime
             tempFate.timeLeft = tempFate.duration - tempFate.timeElapsed
@@ -477,12 +489,14 @@ function SelectNextFate()
             LogInfo("[FATE] Skipping fate #"..tempFate.fateId.." "..tempFate.name.." due to being collections fate.")
         elseif not IsBlackListed(tempFate.fateId) then -- check fate is not blacklisted for any reason
             if IsNonCollectionsNpcFate(tempFate.fateId) then
-                if tempFate.duration > 0 then -- if someone already opened this fate, then treat is as all the other fates
+                if tempFate.startTime > 0 then -- if someone already opened this fate, then treat is as all the other fates
                     nextFate = SelectNextFateHelper(tempFate, nextFate)
                 else -- no one has opened this fate yet
                     if nextFate == nil then -- pick this if there's nothing else
                         nextFate = tempFate
-                    elseif tempFate.isBonusFate or (nextFate.progress == 0 and nextFate.duration == 900) then -- both fates are npc fates
+                    elseif tempFate.isBonusFate then
+                        nextFate = SelectNextFateHelper(tempFate, nextFate)
+                    elseif nextFate.startTime == 0 then -- both fates are unopened npc fates
                         nextFate = SelectNextFateHelper(tempFate, nextFate)
                     end
                 end
@@ -554,25 +568,28 @@ function MoveToFate(nextFate)
     end
 end
 
-function TargetedInteract(target)
-    if target then
-        LogInfo("[FATE] Moving to fate NPC at X:"..target.x..", Y:"..target.y..", Z:"..target.z)
-        PathfindAndMoveTo(target.x, target.y, target.z, true)
-        LogInfo("[FATE] Finished moving to fate NPC")
-        yield("/target "..target.npc.."")
-        repeat
-            yield("/wait 0.1")
-        until GetDistanceToTarget() < 7
-        LogInfo("[FATE] Arrived at fate NPC")
-        yield("/wait 1")
-        yield("/interact")
-        yield("/wait 1")
-        if IsAddonVisible("SelectYesno") then
-            yield("/callback SelectYesno true 0")
-            yield("/wait 0.1")
-        end
-        LogInfo("[FATE] Finished TargetedInteract")
+function InteractWithFateNpc(target)
+    yield("/vnavmesh stop")
+    LogInfo("[FATE] Moving to fate NPC at X:"..target.x..", Y:"..target.y..", Z:"..target.z)
+    yield("/echo [FATE] Moving to fate NPC at X:"..target.x..", Y:"..target.y..", Z:"..target.z)
+    PathfindAndMoveTo(target.x, target.y, target.z)
+    LogInfo("[FATE] Finished moving to fate NPC")
+    yield("/echo [FATE] Finished moving to fate NPC")
+    yield("/target "..target.npcName)
+    yield("/echo [FATE] targetting NPC")
+    repeat
+        CodeWait(1)
+    until GetDistanceToTarget() < 7
+    LogInfo("[FATE] Arrived at fate NPC")
+    yield("/wait 1")
+    yield("/interact")
+    yield("/echo [FATE] interacted")
+    yield("/wait 1")
+    if IsAddonVisible("SelectYesno") then
+        yield("/callback SelectYesno true 0")
+        yield("/wait 0.1")
     end
+    LogInfo("[FATE] Finished TargetedInteract")
 end
 
 --Paths to the enemy (for Meele)
@@ -832,7 +849,7 @@ while true do
     CurrentFate = SelectNextFate() -- init first fate object
 
     -- if has twist of fate buff 
-    if WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289)) then
+    if CurrentFate == nil and WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289)) then
         yield("/echo [FATE] Staying in instance due to Twist of Fate bonus buff.")
         while CurrentFate == nil do
             CodeWait(30)
@@ -845,13 +862,10 @@ while true do
         end
     end
     MoveToFate(CurrentFate)
-    if CurrentFate.startTime == 0 then -- need to talk to npc to start fate
-        TargetedInteract(fateNpc)
-    end
 
     HandleDeath()
 
-    NextFate = nil
+    NextFate = CurrentFate
     ---------------------------- While vnavmesh is Moving ------------------------------
 
     -- while vnavmesh is moving to a fate
@@ -865,11 +879,7 @@ while true do
 
         --Stops Moving to dead Fates or change paths to better fates
         NextFate = SelectNextFate()
-        if NextFate == nil then --Path stops when there is no fate 
-            yield("/echo [FATE] Stopped pathing, cannot find fate.")
-            yield("/vnavmesh stop")
-            yield("/wait 2")
-        elseif CurrentFate.fateId ~= NextFate.fateId then
+        if CurrentFate.fateId ~= NextFate.fateId then
             yield("/echo [FATE] Stopped pathing, higher priority fate found: #"..NextFate.fateId.." "..NextFate.name)
             yield("/vnavmesh stop")
             yield("/wait 0.5")
@@ -880,15 +890,24 @@ while true do
             end
         end
 
-        --Stops Pathing when in Fate
-        if PathIsRunning() and IsInFate() then
-            yield("/vnavmesh stop")
-            yield("/wait "..fatewait)
-            yield("/wait 0.5")
-            PromptRSR()
+        -- Stops Pathing when in Fate
+        if PathIsRunning() then
+            if IsInFate() then
+                LogInfo("[FATE] Arrived at fate #"..CurrentFate.fateId.." "..CurrentFate.name)
+                yield("/vnavmesh stop")
+                yield("/wait "..fatewait)
+                yield("/wait 0.5")
+                PromptRSR()
+            elseif CurrentFate.startTime == 0 and DistanceBetween(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), CurrentFate.fateNpc.x, CurrentFate.fateNpc.y, CurrentFate.fateNpc.z) < 7 then -- need to talk to npc to start fate
+                LogInfo("[FATE] Arrived at fate #"..CurrentFate.fateId.." "..CurrentFate.name)    
+                yield("/vnavmesh stop")
+                yield("/gaction dismount")
+                InteractWithFateNpc(CurrentFate.fateNpc)
+            end
         end
     end
-    LogInfo("[FATE] Arrived at fate #"..CurrentFate.fateId.." "..CurrentFate.name)
+    yield("/echo [FATE] Arrived at fate #"..NextFate.fateId.." "..NextFate.name)
+    CurrentFate = NextFate
 
     --Dismounting upon arriving at fate
     while GetCharacterCondition(CharacterCondition.mounted) and (IsInFate() or CurrentFate.startTime == 0) do
@@ -897,10 +916,12 @@ while true do
         yield("/wait 0.3")
         antistuck()
     end
+    yield("/echo [FATE] Finished dismounting")
 
-    if CurrentFate.startTime == 0 then -- need to talk to npc to start fate
-        TargetedInteract(fateNpc)
-    end
+    -- if CurrentFate.startTime == 0 then -- need to talk to npc to start fate
+    --     yield("/echo [FATE] Speaking to fate NPC "..CurrentFate.fateNpc.npcName)
+    --     InteractWithFateNpc(CurrentFate.fateNpc)
+    -- end
 
     -------------------------------Engage Fate Combat--------------------------------------------
     --Dismounts when in fate
