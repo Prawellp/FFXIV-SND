@@ -94,7 +94,7 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 
 --Teleport and Voucher
 teleport = "Electrope Strike"   --Enter the name of the Teleporter where youu farm Fates so it teleport back to the area and keeps farming
-ChangeInstance = true      --should it Change Instance when there is no Fate (only works on DT fates)
+EnableChangeInstance = true      --should it Change Instance when there is no Fate (only works on DT fates)
 Exchange = false           --should it Exchange Vouchers
 OldV = false               --should it Exchange Old Vouchers
 
@@ -184,7 +184,7 @@ if not HasPlugin("TextAdvance") then
 end
 
 --Optional Plugin Warning
-if ChangeInstance == true  then
+if EnableChangeInstance == true  then
     if HasPlugin("Lifestream") == false then
         yield("/echo [FATE] Please Install Lifestream or Disable ChangeInstance in the settings")
     end
@@ -397,23 +397,46 @@ end
 ]]
 function SelectNextFateHelper(tempFate, nextFate)
     if nextFate == nil then
+        LogInfo("[FATE] Selecting #"..tempFate.fateId.." because no other options so far.")
         return tempFate
-    elseif tempFate.progress > nextFate.progress then
+    elseif nextFate.duration == 0 and tempFate.duration > 0 then -- nextFate is an unopened npc fate
+        LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." is an unopened npc fate.")
         return tempFate
-    elseif tempFate.progress == nextFate.progress then
-        if nextFate.isBonusFate and tempFate.isBonusFate then
-            if tempFate.timeLeft < nextFate.timeLeft then
-                return tempFate
-            elseif tempFate.timeLeft ==  nextFate.timeLeft then
-                if tempFate.playerDistance < nextFate.playerDistance then
-                    LogInfo("[FATE] Fate #"..tempFate.fateId.." "..tempFate.name.." has distance of "..tempFate.playerDistance)
-                    return tempFate
-                end
-            end
-        elseif nextFate.isBonusFate then
-            return nextFate
-        elseif tempFate.isBonusFate then
+    else -- select based on progress
+        if tempFate.progress > nextFate.progress then
+            LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." has less progress.")
             return tempFate
+        elseif tempFate.progress < nextFate.progress then
+            LogInfo("[FATE] Selecting #"..nextFate.fateId.." because other fate #"..tempFate.fateId.." has less progress.")
+            return nextFate
+        elseif tempFate.progress == nextFate.progress then
+            if nextFate.isBonusFate and tempFate.isBonusFate then
+                if tempFate.timeLeft < nextFate.timeLeft then -- select based on time left
+                    LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." has more time left.")
+                    return tempFate
+                elseif tempFate.timeLeft > nextFate.timeLeft then
+                    LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." has more time left.")
+                    return nextFate
+                elseif tempFate.timeLeft ==  nextFate.timeLeft then
+                    if tempFate.playerDistance < nextFate.playerDistance then
+                        LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." is farther.")
+                        return tempFate
+                    elseif tempFate.playerDistance > nextFate.playerDistance then
+                        LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." is farther.")
+                        return tempFate
+                    else
+                        if tempFate.fateId < nextFate.fateId then
+                            return tempFate
+                        else
+                            return nextFate
+                        end
+                    end
+                end
+            elseif nextFate.isBonusFate then
+                return nextFate
+            elseif tempFate.isBonusFate then
+                return tempFate
+            end
         end
     end
     return nextFate
@@ -464,7 +487,7 @@ function SelectNextFate()
                     end
                 end
             elseif IsBossFate(tempFate.fateId) then
-                if endJoinBossFatesIfActive and tempFate.progress >= CompletionToJoinBossFate then
+                if JoinBossFatesIfActive and tempFate.progress >= CompletionToJoinBossFate then
                     nextFate = SelectNextFateHelper(tempFate, nextFate)
                 end
             else -- else is normal fate
@@ -565,21 +588,21 @@ function EnemyPathing()
     end
 end
 
-InstanceCount = 0
+CurrentInstance = 0
 --When there is no Fate 
 function ChangeInstance()
-
     --Change Instance
     while GetCharacterCondition(CharacterCondition.inCombat) do
         yield("/wait 1")
     end
-    if ChangeInstance and InstanceCount ~= 3 then
+    if EnableChangeInstance and CurrentInstance ~= 3 then
         yield("/wait 1")
 
         yield("/target Aetheryte")
         yield("/wait 1")
 
-        while HasTarget() == false do
+        while not HasTarget() do
+            LogInfo("[FATE] Cannot target aetheryte.")
             local closestAetheryte = nil
             local closestAetheryteDistance = math.maxinteger
             for i, aetheryte in ipairs(SelectedZone.aetheryteList) do
@@ -611,28 +634,21 @@ function ChangeInstance()
         end
             yield("/vnavmesh stop")
             yield("/gaction dismount")
-        if GetCharacterCondition(CharacterCondition.transition) == false and InstanceCount == 0 then
+
+
+
+        if not GetCharacterCondition(CharacterCondition.transition) then
             yield("/wait 0.5")
-            yield("/li 1")
+            yield("/li "..CurrentInstance+1)
             yield("/wait 1")
+            CurrentInstance = (CurrentInstance + 1) % 3
         end
-        if GetCharacterCondition(CharacterCondition.transition) == false and InstanceCount == 1 then
-            yield("/wait 0.5")
-            yield("/li 2")
-            yield("/wait 1")
-        end
-        if GetCharacterCondition(CharacterCondition.transition) == false and InstanceCount == 2 then
-            yield("/wait 0.5")
-            yield("/li 3")
-            yield("/wait 1")
-        end
-        if GetCharacterCondition(CharacterCondition.transition) == false and IsPlayerAvailable() == true then
+
+        if not GetCharacterCondition(CharacterCondition.transition) and IsPlayerAvailable() then
             CurrentFate = SelectNextFate()
             yield("/lockon off")
             yield("/automove off")
         end
-        
-        InstanceCount = (InstanceCount + 1) % 3
 
         if GetCharacterCondition(CharacterCondition.transition) then
             yield("/wait 1")
@@ -823,10 +839,15 @@ while true do
         end
     else
         while CurrentFate == nil do
+            LogInfo("[FATE] Changing instances.")
             ChangeInstance()
         end
     end
     MoveToFate(CurrentFate)
+    if CurrentFate.startTime == 0 then -- need to talk to npc to start fate
+        TargetedInteract(fateNpc)
+    end
+
     HandleDeath()
 
     NextFate = nil
@@ -866,6 +887,7 @@ while true do
             PromptRSR()
         end
     end
+    yield("/echo arrived at fate")
 
     --Dismounting upon arriving at fate
     while GetCharacterCondition(CharacterCondition.mounted) and (IsInFate() or CurrentFate.startTime == 0) do
@@ -884,7 +906,7 @@ while true do
     bossModAIActive = false
 
     while IsInFate() do
-        InstanceCount = 0
+        CurrentInstance = 0
         yield("/vnavmesh stop")
         if GetCharacterCondition(CharacterCondition.mounted) then
             yield("/vnavmesh stop")
@@ -917,6 +939,9 @@ while true do
         if GetCharacterCondition(CharacterCondition.dead) then
             HandleDeath()
         end
+
+        yield("/target Forlorn Maiden")
+        yield("/target Forlorn")
     end
 
     --Disables bossmod when the fate is over
