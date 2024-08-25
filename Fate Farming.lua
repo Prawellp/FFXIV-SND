@@ -293,7 +293,6 @@ function IsNonCollectionsNpcFate(fateID)
 end
 
 function GetFateNpc(fateID)
-    yield("/echo Entered GetFateNpc function")
     for index, value in ipairs(NonCollectionFatesWithNpc) do
         if value.fateId == fateID then
             return value
@@ -474,10 +473,6 @@ function SelectNextFate()
         local currentTime = EorzeaTimeToUnixTime(GetCurrentEorzeaTimestamp())
         if tempFate.startTime == 0 then
             tempFate.timeLeft = 900
-            if pcall(function () yield("/echo [FATE] NPC for fate #"..tempFate.fateId.." "..tempFate.name.." is "..tempFate.fateNpc.npcName) end) then
-            else
-                yield("/echo [FATE] Cannot find NPC for fate #"..tempFate.fateId.." "..tempFate.name)
-            end
         else
             tempFate.timeElapsed = currentTime - tempFate.startTime
             tempFate.timeLeft = tempFate.duration - tempFate.timeElapsed
@@ -518,7 +513,6 @@ function SelectNextFate()
         yield("/echo [FATE] No available fates found.")
     else
         LogInfo("[FATE] Final selected fate #"..nextFate.fateId.." "..nextFate.name)
-        yield("/echo [FATE] Selected fate #"..nextFate.fateId.." "..nextFate.name)
     end
     yield("/wait 1")
 
@@ -599,6 +593,7 @@ function InteractWithFateNpc(target)
         end
     end
 
+    yield("/vnavmesh stop")
     LogDebug("[FATE] Arrived at Fate NPC "..target.npcName..". Current distance: "..DistanceBetween(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), target.x, target.y, target.z))
     yield("/wait 1")
     yield("/interact")
@@ -708,7 +703,7 @@ function AvoidEnemiesWhileFlying()
     end
 end
 
-function PromptRSR()
+function TurnOnRSR()
     Class = GetClassJobId()
     
     if Class == 21 or Class == 37 or Class == 19 or Class == 32 then -- tank classes
@@ -880,11 +875,11 @@ while true do
             ChangeInstance()
         end
     end
+    yield("/echo [FATE] Moving to fate #"..CurrentFate.fateId.." "..CurrentFate.name)
     MoveToFate(CurrentFate)
 
     HandleDeath()
 
-    NextFate = CurrentFate
     ---------------------------- While vnavmesh is Moving ------------------------------
 
     -- while vnavmesh is moving to a fate
@@ -898,13 +893,14 @@ while true do
 
         --Stops Moving to dead Fates or change paths to better fates
         NextFate = SelectNextFate()
-        if CurrentFate.fateId ~= NextFate.fateId then
-            yield("/echo [FATE] Stopped pathing, higher priority fate found: #"..NextFate.fateId.." "..NextFate.name)
+        if NextFate~=nil and CurrentFate.fateId ~= NextFate.fateId then
+            yield("/echo [FATE] Stopped pathing to #"..CurrentFate.fateId.." "..CurrentFate.name..", higher priority fate found: #"..NextFate.fateId.." "..NextFate.name)
             yield("/vnavmesh stop")
             yield("/wait 0.5")
+            CurrentFate = NextFate
             if not PathIsRunning() then
-                CurrentFate = NextFate
-                MoveToFate(NextFate)
+                yield("/echo [FATE] Moving to fate #"..CurrentFate.fateId.." "..CurrentFate.name)
+                MoveToFate(CurrentFate)
                 yield("/wait 1")
             end
         end
@@ -913,30 +909,34 @@ while true do
         if PathIsRunning() then
             if IsInFate() then
                 LogInfo("[FATE] Arrived at fate #"..CurrentFate.fateId.." "..CurrentFate.name)
+                yield("/echo Arrived at fate #"..CurrentFate.fateId.." "..CurrentFate.name)
                 yield("/vnavmesh stop")
                 yield("/wait "..fatewait)
                 yield("/wait 0.5")
-                PromptRSR()
-            elseif CurrentFate.startTime == 0 and DistanceBetween(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), CurrentFate.fateNpc.x, CurrentFate.fateNpc.y, CurrentFate.fateNpc.z) < 7 then -- need to talk to npc to start fate
-                LogInfo("[FATE] Arrived at fate #"..CurrentFate.fateId.." "..CurrentFate.name)    
+                TurnOnRSR()
+            elseif IsNonCollectionsNpcFate(CurrentFate.fateId) and CurrentFate.startTime == 0 and DistanceBetween(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), CurrentFate.fateNpc.x, CurrentFate.fateNpc.y, CurrentFate.fateNpc.z) < 15 then -- need to talk to npc to start fate
+                LogInfo("[FATE] Arrived at NPC fate #"..CurrentFate.fateId.." "..CurrentFate.name)
+                yield("/echo Arrived at NPC fate #"..CurrentFate.fateId.." "..CurrentFate.name)
                 yield("/vnavmesh stop")
-                yield("/gaction dismount")
+                yield("/wait "..fatewait)
+                yield("/wait 0.5")
                 InteractWithFateNpc(CurrentFate.fateNpc)
+                TurnOnRSR()
             end
         end
     end
-    yield("/echo [FATE] Arrived at fate #"..NextFate.fateId.." "..NextFate.name)
-    CurrentFate = NextFate
+    yield("/echo [FATE] Arrived at fate #"..CurrentFate.fateId.." "..CurrentFate.name)
 
     --Dismounting upon arriving at fate
-    while GetCharacterCondition(CharacterCondition.mounted) and (IsInFate() or CurrentFate.startTime == 0) do
+    while GetCharacterCondition(CharacterCondition.mounted) and (IsInFate() or IsNonCollectionsNpcFate(CurrentFate.fateId)) do
         yield("/vnavmesh stop")
         yield("/gaction dismount")
         yield("/wait 0.3")
         antistuck()
     end
 
-    if CurrentFate.startTime == 0 then -- need to talk to npc to start fate
+    if IsNonCollectionsNpcFate(CurrentFate.fateId) and CurrentFate.startTime == 0 then -- need to talk to npc to start fate
+        yield("/echo Arrived 2 at NPC fate #"..CurrentFate.fateId.." "..CurrentFate.name)
         InteractWithFateNpc(CurrentFate.fateNpc)
     end
 
