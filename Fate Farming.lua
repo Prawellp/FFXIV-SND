@@ -384,7 +384,7 @@ function TeleportToClosestAetheryteToFate(playerPosition, nextFate)
 
     if aetheryteForClosestFate ~=nil then
         yield("/tp "..aetheryteForClosestFate.aetheryteName)
-        while GetCharacterCondition(CharacterCondition.transition) do
+        while GetCharacterCondition(CharacterCondition.casting) or GetCharacterCondition(CharacterCondition.transition) do
             yield("/wait 1")
         end
     end
@@ -566,9 +566,6 @@ end
 
 function InteractWithFateNpc(target)
     yield("/vnavmesh stop")
-    LogInfo("[FATE] Moving to fate NPC at X:"..target.x..", Y:"..target.y..", Z:"..target.z)
-    PathfindAndMoveTo(target.x, target.y, target.z)
-    LogInfo("[FATE] Finished moving to fate NPC")
     yield("/target "..target.npcName)
     yield("/wait 1")
 
@@ -583,7 +580,7 @@ function InteractWithFateNpc(target)
     yield("/lockon")
     yield("/automove")
 
-    while GetDistanceToTarget() > 15 do
+    while GetDistanceToTarget() > 5 do
         LogDebug("[FATE] Too far from Fate NPC "..target.npcName..". Current distance: "..DistanceBetween(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), target.x, target.y, target.z))
         yield("/wait 0.5")
         if not IsMoving() then
@@ -646,7 +643,7 @@ function ChangeInstance()
                 end
             end
             yield("/tp "..closestAetheryte.aetheryteName)
-            while GetCharacterCondition(CharacterCondition.transition) do
+            while GetCharacterCondition(CharacterCondition.casting) or GetCharacterCondition(CharacterCondition.transition) do
                 yield("/wait 1")
             end
 
@@ -681,7 +678,7 @@ function ChangeInstance()
         end
 
         while GetCharacterCondition(CharacterCondition.transition) do
-            CodeWait(1)
+            yield("/wait 1")
         end
         CurrentFate = SelectNextFate()
         yield("/lockon off")
@@ -773,18 +770,10 @@ function HandleDeath()
         end
 
         yield("/tp "..teleport) --teleport
-        while GetCharacterCondition(CharacterCondition.transition) do --wait between areas
+        while GetCharacterCondition(CharacterCondition.casting) or GetCharacterCondition(CharacterCondition.transition) do --wait between areas
             yield("/wait 1")
         end
 
-    end
-end
-
-function CodeWait(seconds)
-    startTime = GetCurrentEorzeaTimestamp()
-    endTime = startTime + seconds
-    while GetCurrentEorzeaTimestamp() < endTime do
-        -- do nothing
     end
 end
 
@@ -823,7 +812,7 @@ end
 if not IsInZone(SelectedZone.zoneId) then
     yield("/echo [FATE] Teleporting to "..teleport.." and beginning FATE farm.")
     yield("/tp "..teleport)
-    while GetCharacterCondition(CharacterCondition.transition) do
+    while GetCharacterCondition(CharacterCondition.casting) or GetCharacterCondition(CharacterCondition.transition) do
         yield("/wait 1")
     end
 end
@@ -868,7 +857,7 @@ while true do
     if CurrentFate == nil and WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289)) then
         yield("/echo [FATE] Staying in instance due to Twist of Fate bonus buff.")
         while CurrentFate == nil do
-            CodeWait(30)
+            yield("/wait 30")
             CurrentFate = SelectNextFate()
         end
     else
