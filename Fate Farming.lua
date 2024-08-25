@@ -384,7 +384,9 @@ function TeleportToClosestAetheryteToFate(playerPosition, nextFate)
 
     if aetheryteForClosestFate ~=nil then
         yield("/tp "..aetheryteForClosestFate.aetheryteName)
-        yield("/wait 8")
+        while GetCharacterCondition(CharacterCondition.transition) do
+            yield("/wait 1")
+        end
     end
 end
 
@@ -623,7 +625,7 @@ CurrentInstance = 0
 --When there is no Fate 
 function ChangeInstance()
     --Change Instance
-    while GetCharacterCondition(CharacterCondition.inCombat) do
+    while GetCharacterCondition(CharacterCondition.inCombat) or GetCharacterCondition(CharacterCondition.transition) do
         yield("/wait 1")
     end
     if EnableChangeInstance and CurrentInstance ~= 3 then
@@ -644,7 +646,6 @@ function ChangeInstance()
                 end
             end
             yield("/tp "..closestAetheryte.aetheryteName)
-            
             while GetCharacterCondition(CharacterCondition.transition) do
                 yield("/wait 1")
             end
@@ -767,16 +768,15 @@ function HandleDeath()
             yield("/wait 1")
         end
 
-        while GetCharacterCondition(2) do --wait till alive
+        while GetCharacterCondition(CharacterCondition.dead) do --wait till alive
             yield("/wait 1")
         end
 
         yield("/tp "..teleport) --teleport
-        yield("/wait 7")
-
         while GetCharacterCondition(CharacterCondition.transition) do --wait between areas
             yield("/wait 1")
         end
+
     end
 end
 
@@ -823,7 +823,9 @@ end
 if not IsInZone(SelectedZone.zoneId) then
     yield("/echo [FATE] Teleporting to "..teleport.." and beginning FATE farm.")
     yield("/tp "..teleport)
-    yield("/wait 7")
+    while GetCharacterCondition(CharacterCondition.transition) do
+        yield("/wait 1")
+    end
 end
 
 while true do
@@ -916,7 +918,7 @@ while true do
                 TurnOnRSR()
             elseif IsNonCollectionsNpcFate(CurrentFate.fateId) and CurrentFate.startTime == 0 and DistanceBetween(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), CurrentFate.fateNpc.x, CurrentFate.fateNpc.y, CurrentFate.fateNpc.z) < 15 then -- need to talk to npc to start fate
                 LogInfo("[FATE] Arrived at NPC fate #"..CurrentFate.fateId.." "..CurrentFate.name)
-                yield("/echo Arrived at NPC fate #"..CurrentFate.fateId.." "..CurrentFate.name)
+                yield("/echo [FATE] Arrived at NPC fate #"..CurrentFate.fateId.." "..CurrentFate.name)
                 yield("/vnavmesh stop")
                 yield("/wait "..fatewait)
                 yield("/wait 0.5")
