@@ -470,11 +470,12 @@ function MoveToFate(nextFate)
 end
 
 function InteractWithFateNpc(fate)
-    while not IsInFate() and fate.startTime == 0 do
+    while not IsInFate() do
         yield("/echo [FATE] InteractWithFateNpc(fate)")
         yield("/wait 1")
 
-        while not HasTarget() do
+        while not HasTarget() and not IsInFate() do -- break conditions in case someone snipes the interact before you
+            yield("/echo [FATE] Cannot find NPC target")
             -- PathfindAndMoveTo(target.x, target.y, target.z)
             -- yield("/target "..target.npcName)
             yield("/target "..fate.npcName)
@@ -486,13 +487,13 @@ function InteractWithFateNpc(fate)
         yield("/lockon on")
         yield("/automove")
 
-        while GetDistanceToTarget() > 5 do
+        while GetDistanceToTarget() > 5 and not IsInFate() do -- break conditions in case someone snipes the interact before you
             yield("/wait 0.5")
         end
         yield("/vnavmesh stop")
         yield("/wait 1")
 
-        while not IsAddonVisible("SelectYesno") do
+        while not IsAddonVisible("SelectYesno") and not IsInFate() do -- break conditions in case someone snipes the interact before you
             yield("/echo [FATE] Interacting")
             yield("/interact")
             yield("/wait 1")
@@ -501,18 +502,26 @@ function InteractWithFateNpc(fate)
             yield("/callback SelectYesno true 0")
             yield("/wait 0.1")
         end
-
+        -- wait until npc interaction is finished, then unselect the npc
+        while not IsPlayerAvailable() do
+            yield("/echo waiting for player to be available")
+            yield("/wait 1")
+        end
+        yield("/lockon off")
+        yield("/automove off")
+        yield("/wait 1") -- wait to register
+        while HasTarget() do
+            yield("/echo [FATE] Has target: "..GetTargetName())
+            ClearTarget()
+            yield("/wait 1")
+        end
         while not IsInFate() do
             yield("/wait 1")
         end
         LogInfo("[FATE] Exiting InteractWithFateNpc")
     end
     yield("/echo [FATE] Fate begun")
-    if IsInFate() then
-        yield("/lockon off")
-        yield("/automove off")
-        ClearTarget()
-    end
+    yield("/echo [FATE] Target before leaving InteractWithFateNpc: "..GetTargetName())
 end
 
 --Paths to the enemy (for Meele)
@@ -672,7 +681,7 @@ function HandleDeath()
         end
 
         while not IsInZone(SelectedZone.zoneId) do
-            TeleportTo(teleport)
+            TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
         end
     end
 end
@@ -755,23 +764,22 @@ while true do
 
     while not IsPlayerAvailable() do
         -- wait for player to be avialable
+        yield("/wait 1")
     end
 
     yield("/echo Start")
     CurrentFate = SelectNextFate() -- init first fate object
 
-    -- if has twist of fate buff 
-    if CurrentFate == nil and WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289)) then
+    -- if has twist of fate buff, stay in current instance and search for more fates
+    -- while loop allows you to click off the buff
+    while CurrentFate == nil and WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289)) do
         yield("/echo [FATE] Staying in instance due to Twist of Fate bonus buff.")
-        while CurrentFate == nil do
-            yield("/wait 30")
-            CurrentFate = SelectNextFate()
-        end
-    else
-        while CurrentFate == nil do
-            LogInfo("[FATE] Changing instances.")
-            ChangeInstance()
-        end
+        yield("/wait 30")
+        CurrentFate = SelectNextFate()
+    end
+    while CurrentFate == nil do
+        LogInfo("[FATE] Changing instances.")
+        ChangeInstance()
     end
     
     --Announcement for gems
@@ -830,7 +838,7 @@ while true do
     yield("/echo Is mounted: "..tostring(GetCharacterCondition(CharacterCondition.mounted)))
     yield("/echo Is other npc fate: "..tostring(IsOtherNpcFate(CurrentFate.fateName)))
     yield("/echo Start time: "..CurrentFate.startTime)
-    yield("/echo Distance to destination "..tostring(GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 20))
+    yield("/echo Distance to destination < 20 "..tostring(GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 20))
 
     --Dismounting upon arriving at fate
     while GetCharacterCondition(CharacterCondition.mounted) and
@@ -850,10 +858,12 @@ while true do
         InteractWithFateNpc(CurrentFate)
     end
 
+    yield("/echo TargetName before RSR: "..GetTargetName())
     TurnOnRSR()
+    yield("/wait 3")
+    yield("/echo TargetName after RSR: "..GetTargetName())
 
     -------------------------------Engage Fate Combat--------------------------------------------
-    --Dismounts when in fate
     bossModAIActive = false
 
     while IsInFate() do
@@ -869,11 +879,14 @@ while true do
         --Activates Bossmod upon landing in a fate
         if not GetCharacterCondition(CharacterCondition.mounted) and not bossModAIActive then 
             if useBMR then
+                yield("/echo TargetName before BMRAI: "..GetTargetName())
                 yield("/bmrai on")
                 yield("/bmrai followtarget on")
                 yield("/bmrai followcombat on")
                 yield("/bmrai followoutofcombat on")
                 bossModAIActive = true
+                yield("/wait 3")
+                yield("/echo TargetName after BMRAI: "..GetTargetName())
             end
         end
 
@@ -905,11 +918,14 @@ while true do
             bossModAIActive = false
         end
     end
+    yield("/echo [FATE] No longer in fate.")
 
     -----------------------------After Fate------------------------------------------
     while GetCharacterCondition(CharacterCondition.inCombat) do
+        yield("/echo [FATE] Still in combat.")
         yield("/wait 1")
     end
+    yield("/echo [FATE] Out of combat.")
 
     --Repair function
     if RepairAmount > 0 and not GetCharacterCondition(CharacterCondition.mounted) then
