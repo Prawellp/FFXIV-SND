@@ -163,8 +163,9 @@ elseif ChocoboS == false then
 end
 
 --Fate settings
-PandoraSetFeatureState("Auto-Sync FATEs", true) 
-PandoraSetFeatureState("FATE Targeting Mode", true) 
+PandoraSetFeatureState("Auto-Sync FATEs", true)
+PandoraSetFeatureState("FATE Targeting Mode", true)
+PandoraSetFeatureState("Action Combat Targeting", false)
 yield("/wait 0.5")
 
 --snd property
@@ -510,8 +511,8 @@ function InteractWithFateNpc(fate)
         yield("/lockon off")
         yield("/automove off")
         yield("/wait 1") -- wait to register
-        while HasTarget() do
-            yield("/echo [FATE] Has target: "..GetTargetName())
+        while GetTargetName() == fate.npcName do
+            yield("/echo [FATE] Still targetting npc, trying to unset.")
             ClearTarget()
             yield("/wait 1")
         end
