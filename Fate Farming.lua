@@ -198,6 +198,9 @@ end
 if not HasPlugin("TextAdvance") then
     yield("/echo [FATE] Please Install TextAdvance")
 end
+if not HasPlugin("ChatCoordinates") then
+    yield("/echo [FATE] ChatCoordinates is not installed. Map will not show flag when moving to next Fate.")
+end
 
 --Optional Plugin Warning
 if EnableChangeInstance == true  then
@@ -437,7 +440,9 @@ end
 --Paths to the Fate
 function MoveToFate(nextFate)
     yield("/echo [FATE] Moving to fate #"..nextFate.fateId.." "..nextFate.fateName)
-    SetMapFlag(SelectedZone.zoneId, nextFate.x, nextFate.y, nextFate.z)
+    if HasPlugin("ChatCoordinates") then
+        SetMapFlag(SelectedZone.zoneId, nextFate.x, nextFate.y, nextFate.z)
+    end
     yield("/echo finished setting map flag")
 
     while GetCharacterCondition(CharacterCondition.inCombat) do
