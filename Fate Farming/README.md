@@ -9,7 +9,7 @@
 					3. Pandora
 					4. RSR
 					5. BMR
-                    6. TextAdvance
+					6. TextAdvance
 
 3. Make sure to set up your paths. Use the Lua path setting in the SND help config.
    
