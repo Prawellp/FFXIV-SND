@@ -229,7 +229,7 @@ function TeleportToClosestAetheryteToFate(playerPosition, nextFate)
     teleportTimePenalty = 200000 -- to account for how long teleport takes you
 
     local aetheryteForClosestFate = nil
-    local closestTravelDistance = GetDistanceToPoint(nextFate.x, nextFate.y, nextFate.z)
+    local closestTravelDistance = GetDistanceToPoint(nextFate.x, nextFate.y, nextFate.z)^2
     LogInfo("[FATE] Direct flight distance is: "..closestTravelDistance)
     for j, aetheryte in ipairs(SelectedZone.aetheryteList) do
         local distanceAetheryteToFate = DistanceBetween(aetheryte.x, aetheryte.y, aetheryte.z, nextFate.x, nextFate.y, nextFate.z)
@@ -536,8 +536,6 @@ function EnemyPathing()
         local enemy_y = GetTargetRawYPos()
         local enemy_z = GetTargetRawZPos()
         if PathIsRunning() == false then
-            yield("/vnavmesh stop")
-            yield("/wait 1")
             PathfindAndMoveTo(enemy_x, enemy_y, enemy_z)
         end
         yield("/wait 0.1")
@@ -562,6 +560,7 @@ function ChangeInstance()
             local closestAetheryte = nil
             local closestAetheryteDistance = math.maxinteger
             for i, aetheryte in ipairs(SelectedZone.aetheryteList) do
+                -- GetDistanceToPoint is implemented with raw distance instead of distance squared
                 local distanceToAetheryte = GetDistanceToPoint(aetheryte.x, aetheryte.y, aetheryte.z)
                 if distanceToAetheryte < closestAetheryteDistance then
                     closestAetheryte = aetheryte
@@ -859,10 +858,8 @@ while true do
         InteractWithFateNpc(CurrentFate)
     end
 
-    yield("/echo TargetName before RSR: "..GetTargetName())
     TurnOnRSR()
     yield("/wait 3")
-    yield("/echo TargetName after RSR: "..GetTargetName())
 
     -------------------------------Engage Fate Combat--------------------------------------------
     bossModAIActive = false
@@ -879,14 +876,12 @@ while true do
         --Activates Bossmod upon landing in a fate
         if not GetCharacterCondition(CharacterCondition.mounted) and not bossModAIActive then 
             if useBMR then
-                yield("/echo TargetName before BMRAI: "..GetTargetName())
                 yield("/bmrai on")
                 yield("/bmrai followtarget on")
                 yield("/bmrai followcombat on")
                 yield("/bmrai followoutofcombat on")
                 bossModAIActive = true
                 yield("/wait 3")
-                yield("/echo TargetName after BMRAI: "..GetTargetName())
             end
         end
 
