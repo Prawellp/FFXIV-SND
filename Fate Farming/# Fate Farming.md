@@ -2,7 +2,6 @@
 
 ## This script requires all files in this folder. MAKE SURE TO TELL SND WHERE THEY ARE (SND OPTIONS --> LUA PATHS)
 
-###  CURRENTLY ONLY SUPPORTS FLYING MOUNTS OR WALKING. (I'm working on a fix).
 1. Make sure you have the right plugins.
    
 					1. Chat Coordinates
