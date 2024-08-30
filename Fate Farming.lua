@@ -101,7 +101,7 @@ OldV = false               --should it Exchange Old Vouchers
 --Fate settings
 WaitIfBonusBuff = true          --Don't change instances if you have the Twist of Fate bonus buff
 CompletionToIgnoreFate = 80     --Percent above which to ignore fate
-MinTimeLeftToIgnoreFate = 15*60  --Seconds below which to ignore fate
+MinTimeLeftToIgnoreFate = 5*60  --Seconds below which to ignore fate
 JoinBossFatesIfActive = true    --Join boss fates if someone is already working on it (to avoid soloing long boss fates). If false, avoid boss fates entirely.
 CompletionToJoinBossFate = 20   --Percent above which to join boss fate
 fatewait = 0                    --the amount how long it should when before dismounting (0 = at the beginning of the fate 3-5 = should be in the middle of the fate)
@@ -226,8 +226,7 @@ end
 ------------------------------Functions----------------------------------------------
 
 function TeleportToClosestAetheryteToFate(playerPosition, nextFate)
-    yield("/echo TeleportToClosestAetheryteToFate(playerPosition, nextFate)")
-    teleportTimePenalty = 300000 -- to account for how long teleport takes you
+    teleportTimePenalty = 200000 -- to account for how long teleport takes you
 
     local aetheryteForClosestFate = nil
     local closestTravelDistance = GetDistanceToPoint(nextFate.x, nextFate.y, nextFate.z)
@@ -443,7 +442,6 @@ function MoveToFate(nextFate)
     if HasPlugin("ChatCoordinates") then
         SetMapFlag(SelectedZone.zoneId, nextFate.x, nextFate.y, nextFate.z)
     end
-    yield("/echo finished setting map flag")
 
     while GetCharacterCondition(CharacterCondition.inCombat) do
         yield("/wait 1")
@@ -477,7 +475,6 @@ end
 
 function InteractWithFateNpc(fate)
     while not IsInFate() do
-        yield("/echo [FATE] InteractWithFateNpc(fate)")
         yield("/wait 1")
 
         while not HasTarget() and not IsInFate() do -- break conditions in case someone snipes the interact before you
@@ -500,7 +497,6 @@ function InteractWithFateNpc(fate)
         yield("/wait 1")
 
         while not IsAddonVisible("SelectYesno") and not IsInFate() do -- break conditions in case someone snipes the interact before you
-            yield("/echo [FATE] Interacting")
             yield("/interact")
             yield("/wait 1")
         end
@@ -510,14 +506,12 @@ function InteractWithFateNpc(fate)
         end
         -- wait until npc interaction is finished, then unselect the npc
         while not IsPlayerAvailable() do
-            yield("/echo waiting for player to be available")
             yield("/wait 1")
         end
         yield("/lockon off")
         yield("/automove off")
         yield("/wait 1") -- wait to register
         while GetTargetName() == fate.npcName do
-            yield("/echo [FATE] Still targetting npc, trying to unset.")
             ClearTarget()
             yield("/wait 1")
         end
@@ -546,7 +540,6 @@ end
 CurrentInstance = 0
 --When there is no Fate 
 function ChangeInstance()
-    yield("/echo Entered ChangeInstance() function")
     --Change Instance
     while GetCharacterCondition(CharacterCondition.inCombat) or GetCharacterCondition(CharacterCondition.transition) do
         yield("/wait 1")
@@ -559,7 +552,6 @@ function ChangeInstance()
         yield("/wait 1")
 
         while not HasTarget() do
-            LogInfo("[FATE] Cannot target aetheryte.")
             local closestAetheryte = nil
             local closestAetheryteDistance = math.maxinteger
             for i, aetheryte in ipairs(SelectedZone.aetheryteList) do
@@ -574,8 +566,6 @@ function ChangeInstance()
             yield("/target Aetheryte")
             yield("/wait 1")
         end
-
-        yield("/echo [FATE] Found aetheryte target")
 
         yield("/lockon")
         yield("/automove")
@@ -728,7 +718,9 @@ if NavIsReady() then
 end
 
 -- turn on TextAdvance
-yield("/at y")
+if HasPlugin("TextAdvance") then
+    yield("/at y")
+end
 
 GemAnnouncementCount = 0
 cCount = 0
@@ -773,7 +765,6 @@ while true do
         yield("/wait 1")
     end
 
-    yield("/echo Start")
     CurrentFate = SelectNextFate() -- init first fate object
 
     -- if has twist of fate buff, stay in current instance and search for more fates
@@ -802,7 +793,6 @@ while true do
 
     -- while vnavmesh is moving to a fate
     while PathIsRunning() or PathfindInProgress() and not IsInFate() do
-        yield("/echo START OF LOOP")
         
         -- if mounted on land, jump to fly
         if GetCharacterCondition(CharacterCondition.mounted) and not GetCharacterCondition(CharacterCondition.flying) and HasFlightUnlocked(SelectedZone.zoneId) then 
@@ -823,10 +813,6 @@ while true do
             end
         end
 
-        if IsOtherNpcFate(CurrentFate.fateName) then
-            yield("/echo Distance to fate: "..GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z))
-        end
-
         -- Stops Pathing when at or close to Fate, because navmesh sometimes can't get to distance 0
         if PathIsRunning() then
             if IsInFate() or
@@ -840,11 +826,6 @@ while true do
         end
     end
     yield("/echo [FATE] Arrived at fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
-
-    yield("/echo Is mounted: "..tostring(GetCharacterCondition(CharacterCondition.mounted)))
-    yield("/echo Is other npc fate: "..tostring(IsOtherNpcFate(CurrentFate.fateName)))
-    yield("/echo Start time: "..CurrentFate.startTime)
-    yield("/echo Distance to destination < 20 "..tostring(GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 20))
 
     --Dismounting upon arriving at fate
     while GetCharacterCondition(CharacterCondition.mounted) and
@@ -910,8 +891,9 @@ while true do
             HandleDeath()
         end
 
+        -- switches to targeting forlorns for bonus (if present)
         yield("/target Forlorn Maiden")
-        yield("/target Forlorn")
+        yield("/target The Forlorn")
     end
 
     --Disables bossmod when the fate is over
