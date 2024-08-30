@@ -93,7 +93,7 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 --false = no
 
 --Teleport and Voucher
-SelectedZoneName = "Heritage Found"  --Enter the name of the zone where you want to farm Fates
+SelectedZoneName = "Living Memory"  --Enter the name of the zone where you want to farm Fates
 EnableChangeInstance = true      --should it Change Instance when there is no Fate (only works on DT fates)
 Exchange = false           --should it Exchange Vouchers
 OldV = false               --should it Exchange Old Vouchers
@@ -466,9 +466,13 @@ function MoveToFate(nextFate)
 
     if HasFlightUnlocked(SelectedZone.zoneId) then
         LogInfo("/echo [FATE] Moving to "..nextFate.x..", "..nextFate.y..", "..nextFate.z)
+        yield("/vnavmesh stop")
+        yield("/wait 1")
         PathfindAndMoveTo(nextFate.x, nextFate.y, nextFate.z, true)
     else
         LogInfo("/echo [FATE] Moving to "..nextFate.x..", "..nextFate.y..", "..nextFate.z)
+        yield("/vnavmesh stop")
+        yield("/wait 1")
         PathfindAndMoveTo(nextFate.x, nextFate.y, nextFate.z)
     end
     yield("/wait 2")
@@ -531,7 +535,9 @@ function EnemyPathing()
         local enemy_x = GetTargetRawXPos()
         local enemy_y = GetTargetRawYPos()
         local enemy_z = GetTargetRawZPos()
-        if PathIsRunning() == false then 
+        if PathIsRunning() == false then
+            yield("/vnavmesh stop")
+            yield("/wait 1")
             PathfindAndMoveTo(enemy_x, enemy_y, enemy_z)
         end
         yield("/wait 0.1")
@@ -549,10 +555,10 @@ function ChangeInstance()
     if EnableChangeInstance then
         yield("/wait 1")
 
-        yield("/target Aetheryte")
+        yield("/target aetheryte")
         yield("/wait 1")
 
-        while not HasTarget() or GetTargetName ~= "Aetheryte" do
+        while not HasTarget() or GetTargetName() ~= "aetheryte" do
             local closestAetheryte = nil
             local closestAetheryteDistance = math.maxinteger
             for i, aetheryte in ipairs(SelectedZone.aetheryteList) do
@@ -603,6 +609,8 @@ function AvoidEnemiesWhileFlying()
         PlocZ = GetPlayerRawZPos(Name)
         yield("/gaction jump")
         yield("/wait 0.5")
+        yield("/vnavmesh stop")
+        yield("/wait 1")
         PathfindAndMoveTo(PlocX, PlocY, PlocZ, true)
         PathStop()
         yield("/wait 2")
@@ -641,10 +649,14 @@ function antistuck()
             local enemy_z = GetTargetRawZPos()
             if PathIsRunning() == false and GetCharacterCondition(4, false) then 
                 LogInfo("[FATE] Moving to enemy "..enemy_x..", "..enemy_y..", "..enemy_z)
+                yield("/vnavmesh stop")
+                yield("/wait 1")
                 PathfindAndMoveTo(enemy_x, enemy_y, enemy_z)
             end
             if not PathIsRunning() and GetCharacterCondition(4, true) then
                 LogInfo("[FATE] Moving to enemy "..enemy_x..", "..enemy_y..", "..enemy_z)
+                yield("/vnavmesh stop")
+                yield("/wait 1")
                 PathfindAndMoveTo(enemy_x, enemy_y, enemy_z, true)
             end
             yield("/wait 0.5")
@@ -652,6 +664,7 @@ function antistuck()
         end
         if stuck >= 20 then
             yield("/vnavmesh stop")
+            yield("/wait 1")
         end
         stuck = 0
     end
@@ -806,7 +819,7 @@ while true do
         if NextFate~=nil and CurrentFate.fateId ~= NextFate.fateId then
             yield("/echo [FATE] Stopped pathing to #"..CurrentFate.fateId.." "..CurrentFate.fateName..", higher priority fate found: #"..NextFate.fateId.." "..NextFate.fateName)
             yield("/vnavmesh stop")
-            yield("/wait 0.5")
+            yield("/wait 1")
             CurrentFate = NextFate
             if not PathIsRunning() then
                 MoveToFate(CurrentFate)
@@ -822,7 +835,7 @@ while true do
                 yield("/echo Arrived at fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
                 yield("/vnavmesh stop")
                 yield("/wait "..fatewait)
-                yield("/wait 0.5")
+                yield("/wait 1")
             end
         end
     end
@@ -834,7 +847,7 @@ while true do
         yield("/echo Dismounting...")
         yield("/vnavmesh stop")
         yield("/gaction dismount")
-        yield("/wait 0.3")
+        yield("/wait 1")
         antistuck()
     end
 
@@ -857,11 +870,10 @@ while true do
     while IsInFate() do
         CurrentInstance = 0
         yield("/vnavmesh stop")
+        yield("/wait 1")
         if GetCharacterCondition(CharacterCondition.mounted) then
-            yield("/vnavmesh stop")
             yield("/gaction dismount")
             yield("/wait 2")
-            yield("/vnavmesh stop")
         end
 
         --Activates Bossmod upon landing in a fate
@@ -1053,7 +1065,7 @@ while true do
                     yield("/deliveroo enable")
                 end
                 if DeliverooIsTurnInRunning() then
-                    yield("/vnav stop")
+                    yield("/vnavmesh stop")
                 end
                 while DeliverooIsTurnInRunning() do
                     yield("/wait 1")
