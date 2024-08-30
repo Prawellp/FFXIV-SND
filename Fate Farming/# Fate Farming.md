@@ -1,4 +1,4 @@
-# Hunt Log Doer
+# Fate Farming Script
 
 ## This script requires all files in this folder. MAKE SURE TO TELL SND WHERE THEY ARE (SND OPTIONS --> LUA PATHS)
 
