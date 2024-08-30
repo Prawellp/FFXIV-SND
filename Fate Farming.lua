@@ -465,12 +465,13 @@ function MoveToFate(nextFate)
     end
 
     if HasFlightUnlocked(SelectedZone.zoneId) then
-        yield("/echo [FATE] Moving to "..nextFate.x..", "..nextFate.y..", "..nextFate.z)
+        LogInfo("/echo [FATE] Moving to "..nextFate.x..", "..nextFate.y..", "..nextFate.z)
         PathfindAndMoveTo(nextFate.x, nextFate.y, nextFate.z, true)
     else
-        yield("/echo [FATE] Moving to "..nextFate.x..", "..nextFate.y..", "..nextFate.z)
+        LogInfo("/echo [FATE] Moving to "..nextFate.x..", "..nextFate.y..", "..nextFate.z)
         PathfindAndMoveTo(nextFate.x, nextFate.y, nextFate.z)
     end
+    yield("/wait 2")
 end
 
 function InteractWithFateNpc(fate)
@@ -551,7 +552,7 @@ function ChangeInstance()
         yield("/target Aetheryte")
         yield("/wait 1")
 
-        while not HasTarget() do
+        while not HasTarget() or GetTargetName ~= "Aetheryte" do
             local closestAetheryte = nil
             local closestAetheryteDistance = math.maxinteger
             for i, aetheryte in ipairs(SelectedZone.aetheryteList) do
