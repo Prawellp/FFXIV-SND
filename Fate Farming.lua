@@ -8,9 +8,19 @@
 
   ***********
   * Version *
-  *  0.2.4  *
+  *  1.0.0  *
   ***********
-
+    -> 1.0.0    Code changes
+                    added pathing priority to prefer bonus fates -> most progress -> fate time left -> by distance
+                    added map flag for next fate
+                    added prioirity targeting for forlorns
+                    added settings for:
+                        - WaitIfBonusBuff
+                        - MinTimeLeftToIgnoreFate
+                        - JoinBossFatesIfActive
+                        - CompletionToJoinBossFate
+                    enabled non-collection fates that require interacting with an npc to start
+                    [dev] rework of internal fate lists, aetheryte lists, character statuses
     -> 0.2.4    Code changes
                     added revive upon death (requires "teleport" to be set in the settings)
                     added GC turn ins
@@ -85,15 +95,20 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 --false = no
 
 --Teleport and Voucher
-teleport = "Iq Br'aax"     --Enter the name of the Teleporter where youu farm Fates so it teleport back to the area and keeps farming
-ChangeInstance = true      --should it Change Instance when there is no Fate (only works on DT fates)
+SelectedZoneName = "Coerthas Central Highlands"  --Enter the name of the zone where you want to farm Fates
+EnableChangeInstance = true      --should it Change Instance when there is no Fate (only works on DT fates)
 Exchange = false           --should it Exchange Vouchers
 OldV = false               --should it Exchange Old Vouchers
 
 --Fate settings
-CompletionToIgnoreFate = 80 --Percent above which we ignore the fate
-fatewait = 0               --the amount how long it should when before dismounting (0 = at the edge of the fate 3-5 = should be in the middle of the fate)
-BMR = true                 --if you want to use the BossMod dodge/follow mode
+WaitIfBonusBuff = true          --Don't change instances if you have the Twist of Fate bonus buff
+CompletionToIgnoreFate = 80     --Percent above which to ignore fate
+MinTimeLeftToIgnoreFate = 5*60  --Seconds below which to ignore fate
+JoinBossFatesIfActive = true    --Join boss fates if someone is already working on it (to avoid soloing long boss fates). If false, avoid boss fates entirely.
+CompletionToJoinBossFate = 20   --Percent above which to join boss fate
+fatewait = 0                    --the amount how long it should when before dismounting (0 = at the beginning of the fate 3-5 = should be in the middle of the fate)
+useBMR = true                   --if you want to use the BossMod dodge/follow mode
+
 
 --Utilities
 RepairAmount = 20          --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repaier. onky supports self repair)
@@ -125,6 +140,275 @@ Announce = 2
 ]]
   
   ----------------------------------Settings----------------------------------------------
+
+CharacterCondition = {
+    dead=2,
+    mounted=4,
+    inCombat=26,
+    casting=27,
+    occupied31=31,
+    occupied32=32,
+    occupied=33,
+    occupied39=39,
+    transition=45,
+    jumping=48,
+    flying=77
+}
+
+
+FatesData = {
+    {
+        zoneName = "Coerthas Central Highlands",
+        zoneId = 155,
+        aetheryteList = {
+            { aetheryteName="Camp Dragonhead", x=223.98718, y=315.7854, z=-234.85168 }
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    },
+    {
+        zoneName = "Coerthas Western Highlands",
+        zoneId = 397,
+        aetheryteList = {
+            { aetheryteName="Falcon's Nest", x=474.87585, y=217.94458, z=708.5221 }
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    },
+    {
+        zoneName = "Mor Dhona",
+        zoneId = 156,
+        aetheryteList = {
+            { aetheryteName="Revenant's Toll", x=40.024292, y=24.002441, z=-668.0247 }
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    },
+    {
+        zoneName = "The Sea of Clouds",
+        zoneId = 401,
+        aetheryteList = {
+            { aetheryteName="Camp Cloudtop", x=-615.7473, y=-118.36426, z=546.5934 },
+            { aetheryteName="Ok' Zundu", x=-613.1533, y=-49.485046, z=-415.03015 }
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    },
+    {
+        zoneName = "Azys Lla",
+        zoneId = 402,
+        aetheryteList = {
+            { aetheryteName="Helix", x=-722.8046, y=-182.29956, z=-593.40814 }
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    },
+    {
+        zoneName = "The Dravanian Forelands",
+        zoneId = 398,
+        aetheryteList = {
+            { aetheryteName="Tailfeather", x=532.6771, y=-48.722107, z=30.166992 },
+            { aetheryteName="Anyx Trine", x=-304.12756, y=-16.70868, z=32.059082 }
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    },
+    {
+        zoneName = "The Dravanian Hinterlands",
+        zoneId=399,
+        tpZoneId = 478,
+        aetheryteList = {
+            { aetheryteName="Idyllshire", x=71.94617, y=211.26111, z=-18.905945 }
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    },
+    {
+        zoneName = "The Churning Mists",
+        zoneId=399,
+        tpZoneId = 400,
+        aetheryteList = {
+            { aetheryteName="Moghome", x=259.20496, y=-37.70508, z=596.85657 },
+            { aetheryteName="Zenith", x=-584.9546, y=52.84192, z=313.43542 },
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    },
+    {
+        zoneName = "Urqopacha",
+        zoneId = 1187,
+        aetheryteList = {
+            { aetheryteName="Wachunpelo", x=335, y=-160, z=-415 },
+            { aetheryteName="Worlar's Echo", x=465, y=115, z=635 },
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+                "Young Volcanoes"
+            }
+        }
+    },
+    {
+        zoneName="Kozama'uka",
+        zoneId=1188,
+        aetheryteList={
+            { aetheryteName="Ok'hanu", x=-170, y=6, z=-470 },
+            { aetheryteName="Many Fires", x=465, y=115, z=635 },
+            { aetheryteName="Earthenshire", x=545, y=115, z=200 }
+        },
+        fatesList={
+            collectionsFates={
+                "Borne on the Backs of Burrowers"
+            },
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+                "Mole Patrol"
+            }
+        }
+    },
+    {
+        zoneName="Yak T'el",
+        zoneId=1189,
+        aetheryteList={
+            { aetheryteName="Iq Br'aax", x=-400, y=24, z=-431 },
+            { aetheryteName="Mamook", x=720, y=-132, z=527 }
+        },
+        fatesList= {
+            collectionsFates= {
+                "Escape Shroom",
+                "The Spawning"
+            },
+            otherNpcFates= {},
+            bossFates= {
+                "Moths are Tough"
+            },
+            blacklistedFates= {
+                "The Departed"
+            }
+        }
+    },
+    {
+        zoneName="Shaaloani",
+        zoneId=1190,
+        aetheryteList= {
+            { aetheryteName="Hhusatahwi", x=390, y=0, z=465 },
+            { aetheryteName="Sheshenewezi Springs", x=-295, y=19, z=-115 },
+            { aetheryteName="Mehwahhetsoan", x=310, y=-15, z=-567 }
+        },
+        fatesList= {
+            collectionsFates= {
+                "Gonna Have Me Some Fur",
+                "The Serpentlord Sires"
+            },
+            otherNpcFates= {},
+            bossFates= {
+                "The Serpentlord Seethes",
+                "Breaking the Jaw"
+            },
+            blacklistedFates= {}
+        }
+    },
+    {
+        zoneName="Heritage Found",
+        zoneId=1191,
+        aetheryteList= {
+            { aetheryteName="Yyasulani Station", x=515, y=145, z=210 },
+            { aetheryteName="The Outskirts", x=-221, y=32, z=-583 },
+            { aetheryteName="Electrope Strike", x=-222, y=31, z=123 }
+        },
+        fatesList= {
+            collectionsFates= {
+                "License to Dill",
+                "When It's So Salvage"
+            },
+            otherNpcFates= {
+                { fateName= "It's Super Defective", npcName= "Novice Hunter" },
+                { fateName= "Running of the Katobleps", npcName= "Novice Hunter" },
+                { fateName= "Ware the Wolves", npcName= "Imperiled Hunter" },
+                { fateName= "Domo Arigato", npcName= "Perplexed Reforger" },
+                { fateName= "Old Stampeding Grounds", npcName= "Driftdowns Reforger" },
+                { fateName= "Pulling the Wool", npcName= "Panicked Courier" }
+            },
+            bossFates= {
+                "A Scythe to an Axe Fight",
+                "(Got My Eye) Set on You"
+            },
+            blacklistedFates= {}
+        }
+    },
+    {
+        zoneName="Living Memory",
+        zoneId=1192,
+        aetheryteList= {
+            { aetheryteName="Leynode Mnemo", x=0, y=56, z=796 },
+            { aetheryteName="Leynode Pyro", x=659, y=27, z=-285 },
+            { aetheryteName="Leynode Aero", x=-253, y=56, z=-400 }
+        },
+        fatesList= {
+            collectionsFates= {
+                "Seeds of Tomorrow",
+                "Scattered Memories",
+                "Combing the Area"
+            },
+            otherNpcFates= {
+                { fateName= "Canal Carnage", npcName= "Unlost Sentry GX" },
+                { fateName= "Mascot March", npcName= "The Grand Marshal" }
+            },
+            bossFates= {
+                "Feed Me, Sentries",
+                "Slime to Die",
+                "Critical Corruption",
+                "Horse in the Round",
+                "Mascot Murder"
+            },
+            blacklistedFates= {}
+        }
+    }
+}
+
 --Chocobo settings
 if ChocoboS == true then
     PandoraSetFeatureState("Auto-Summon Chocobo", true) 
@@ -135,8 +419,9 @@ elseif ChocoboS == false then
 end
 
 --Fate settings
-PandoraSetFeatureState("Auto-Sync FATEs", true) 
-PandoraSetFeatureState("FATE Targeting Mode", true) 
+PandoraSetFeatureState("Auto-Sync FATEs", true)
+PandoraSetFeatureState("FATE Targeting Mode", true)
+PandoraSetFeatureState("Action Combat Targeting", false)
 yield("/wait 0.5")
 
 --snd property
@@ -157,835 +442,1022 @@ setSNDProperty("StopMacroIfAddonNotFound", false)
 setSNDProperty("StopMacroIfAddonNotVisible", false)
 
 --Required Plugin Warning
-if HasPlugin("vnavmesh") == false then
+if not HasPlugin("vnavmesh") then
     yield("/echo [FATE] Please Install vnavmesh")
 end
-if HasPlugin("RotationSolverReborn") == false and HasPlugin("RotationSolver") == false then
+if not HasPlugin("RotationSolverReborn") and not HasPlugin("RotationSolver") then
     yield("/echo [FATE] Please Install Rotation Solver Reborn")
 end
-if HasPlugin("PandorasBox") == false then
-    yield("/echo [FATE] Please Install Pandora'sBox")
+if not HasPlugin("PandorasBox") then
+    yield("/echo [FATE] Please Install Pandora's Box")
+end
+if not HasPlugin("TextAdvance") then
+    yield("/echo [FATE] Please Install TextAdvance")
+end
+if not HasPlugin("ChatCoordinates") then
+    yield("/echo [FATE] ChatCoordinates is not installed. Map will not show flag when moving to next Fate.")
 end
 
 --Optional Plugin Warning
-if ChangeInstance == true  then
-if HasPlugin("Lifestream") == false then
-    yield("/echo [FATE] Please Install Lifestream or Disable ChangeInstance in the settings")
-end
+if EnableChangeInstance == true  then
+    if HasPlugin("Lifestream") == false then
+        yield("/echo [FATE] Please Install Lifestream or Disable ChangeInstance in the settings")
+    end
 end
 if Retainers == true then
-if HasPlugin("AutoRetainer") == false then
-    yield("/echo [FATE] Please Install AutoRetainer")
-end
+    if HasPlugin("AutoRetainer") == false then
+        yield("/echo [FATE] Please Install AutoRetainer")
+    end
 end
 if ExtractMateria == true then
-if HasPlugin("YesAlready") == false then
-    yield("/echo [FATE] Please Install YesAlready")
-end 
+    if HasPlugin("YesAlready") == false then
+        yield("/echo [FATE] Please Install YesAlready")
+    end 
 end   
-if BMR == true then
-if HasPlugin("BossModReborn") == false and HasPlugin("BossMod") == false then
-    yield("/echo [FATE] Please Install BossMod Reborn")
-end
+if useBMR == true then
+    if HasPlugin("BossModReborn") == false and HasPlugin("BossMod") == false then
+        yield("/echo [FATE] Please Install BossMod Reborn")
+    end
 end 
 ------------------------------Functions----------------------------------------------
---Array declaration
-FatesBlacklist = { --Fates to blacklist
-    1931, -- Combing the Area, collect fate
-    1937, -- Borne on the back of Burrowers, collect fate
-    1936, -- mole patrol, defence fate?
-    1886, -- Young Volcanoes, dangerous
-    1906, -- Escape Shroom, collect fate
-    1869, -- The Serpentlord Sires, collect fate
-    1865, -- Gonna Have me Some Fur, collect fate
-    1871, -- The Serpentlord Seethes, S rank fate
-    1949, -- License to Dill, collect fate
-    1957, -- When It's So Salvage, collect fate
-    1913, -- Seeds of Tomorrow, collect fate
-    1917, -- Scattered Memories, collect fate
-    1922, -- Mascot Murder, S rank fate
-    1909, -- The Spawning, collect fate
-    1897, -- The Departed, dangerous
-    1908 -- Moths Are Tough, Boss fight, very long
-}
 
---Check if fate is in blacklist 
-function IsBlackListed (fateID)
-    for index, value in ipairs(FatesBlacklist) do
-        if value == fateID then
+function TeleportToClosestAetheryteToFate(playerPosition, nextFate)
+    teleportTimePenalty = 300000 -- to account for how long teleport takes you
+
+    local aetheryteForClosestFate = nil
+    local closestTravelDistance = GetDistanceToPoint(nextFate.x, nextFate.y, nextFate.z)^2
+    LogInfo("[FATE] Direct flight distance is: "..closestTravelDistance)
+    for j, aetheryte in ipairs(SelectedZone.aetheryteList) do
+        local distanceAetheryteToFate = DistanceBetween(aetheryte.x, aetheryte.y, aetheryte.z, nextFate.x, nextFate.y, nextFate.z)
+        local comparisonDistance = distanceAetheryteToFate + teleportTimePenalty
+        LogInfo("[FATE] Distance via "..aetheryte.aetheryteName.." adjusted for tp penalty is "..tostring(comparisonDistance))
+
+        if comparisonDistance < closestTravelDistance then
+            LogInfo("[FATE] Updating closest aetheryte to "..aetheryte.aetheryteName)
+            closestTravelDistance = comparisonDistance
+            aetheryteForClosestFate = aetheryte
+        end
+    end
+
+    if aetheryteForClosestFate ~=nil then
+        TeleportTo(aetheryteForClosestFate.aetheryteName)
+    end
+end
+
+function TeleportTo(aetheryteName)
+    while EorzeaTimeToUnixTime(GetCurrentEorzeaTimestamp()) - LastTeleportTimeStamp < 5 do
+        LogInfo("[FATE] Too soon since last teleport. Waiting...")
+        yield("/wait 5")
+    end
+
+    yield("/tp "..aetheryteName)
+    yield("/wait 1") -- wait for casting to begin
+    while GetCharacterCondition(CharacterCondition.casting) do
+        LogInfo("[FATE] Casting teleport...")
+        yield("/wait 1")
+    end
+    yield("/wait 1") -- wait for that microsecond in between the cast finishing and the transition beginning
+    while GetCharacterCondition(CharacterCondition.transition) do
+        LogInfo("[FATE] Teleporting...")
+        yield("/wait 1")
+    end
+    LastTeleportTimeStamp = EorzeaTimeToUnixTime(GetCurrentEorzeaTimestamp())
+end
+
+function EorzeaTimeToUnixTime(eorzeaTime)
+    return eorzeaTime/(144/7) -- 24h Eorzea Time equals 70min IRL
+end
+
+--[[
+    Given two fates, picks the better one based on priority progress -> is bonus -> time left -> distance
+]]
+function SelectNextFateHelper(tempFate, nextFate)
+    if tempFate.timeLeft < MinTimeLeftToIgnoreFate or tempFate.progress > CompletionToIgnoreFate then
+        return nextFate
+    else
+        if nextFate == nil then
+                LogInfo("[FATE] Selecting #"..tempFate.fateId.." because no other options so far.")
+                return tempFate
+        elseif nextFate.startTime == 0 and tempFate.startTime > 0 then -- nextFate is an unopened npc fate
+            LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." is an unopened npc fate.")
+            return tempFate
+        elseif tempFate.startTime == 0 and nextFate.startTime > 0 then -- tempFate is an unopened npc fate
+            return nextFate
+        else -- select based on progress
+            if tempFate.progress > nextFate.progress then
+                LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." has less progress.")
+                return tempFate
+            elseif tempFate.progress < nextFate.progress then
+                LogInfo("[FATE] Selecting #"..nextFate.fateId.." because other fate #"..tempFate.fateId.." has less progress.")
+                return nextFate
+            elseif tempFate.progress == nextFate.progress then
+                if nextFate.isBonusFate and tempFate.isBonusFate then
+                    if tempFate.timeLeft < nextFate.timeLeft then -- select based on time left
+                        LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." has more time left.")
+                        return tempFate
+                    elseif tempFate.timeLeft > nextFate.timeLeft then
+                        LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." has more time left.")
+                        return nextFate
+                    elseif tempFate.timeLeft ==  nextFate.timeLeft then
+                        tempFatePlayerDistance = GetDistanceToPoint(tempFate.x, tempFate.y, tempFate.z)
+                        nextFatePlayerDistance = GetDistanceToPoint(nextFate.x, nextFate.y, nextFate.z)
+                        if tempFatePlayerDistance < nextFatePlayerDistance then
+                            LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." is farther.")
+                            return tempFate
+                        elseif tempFatePlayerDistance > nextFatePlayerDistance then
+                            LogInfo("[FATE] Selecting #"..nextFate.fateId.." because other fate #"..nextFate.fateId.." is farther.")
+                            return nextFate
+                        else
+                            if tempFate.fateId < nextFate.fateId then
+                                return tempFate
+                            else
+                                return nextFate
+                            end
+                        end
+                    end
+                elseif nextFate.isBonusFate then
+                    return nextFate
+                elseif tempFate.isBonusFate then
+                    return tempFate
+                end
+            end
+        end
+    end
+    return nextFate
+end
+
+function GetFateNpcName(fateName)
+    for i, fate in ipairs(SelectedZone.fatesList.otherNpcFates) do
+        if fate.fateName == fateName then
+            return fate.npcName
+        end
+    end
+end
+
+function IsCollectionsFate(fateName)
+    for i, collectionsFate in ipairs(SelectedZone.fatesList.collectionsFates) do
+        if collectionsFate == fateName then
             return true
         end
     end
     return false
 end
 
-function CheckTeleport (fateID)
-    fatex = GetFateLocationX(fateID)
-    fatey = GetFateLocationY(fateID)
-    fatez = GetFateLocationZ(fateID)
-    Playerx = GetPlayerRawXPos()
-    Playery = GetPlayerRawYPos()
-    Playerz = GetPlayerRawZPos()
-    distanceatheryte1 = 100000000
-    distanceatheryte2 = 100000000
-    distanceatheryte3 = 100000000000
-    distanceleeway = 150000
-    distancefly = DistanceBetween(fatex, fatey, fatez, Playerx, Playery, Playerz)
-    teleportath1 = ""
-    teleportath2 = ""
-    teleportath3 = ""
-
-
-    if IsInZone(1187) then       --Urqopacha
-    distanceatheryte1 = DistanceBetween(fatex, fatey, fatez, 335, -160, -415) -- Wach
-    distanceatheryte2 = DistanceBetween(fatex, fatey, fatez, 465, 115, 635) -- Worl
-    teleportath1 = "Wachunpelo"
-    teleportath2 = "Worlar's Echo"
+function IsBossFate(fateName)
+    for i, bossFate in ipairs(SelectedZone.fatesList.bossFates) do
+        if bossFate == fateName then
+            return true
+        end
     end
-    
-    if IsInZone(1188) then       --Kozama'uka
-    distanceatheryte1 = DistanceBetween(fatex, fatey, fatez, -170, 6, -470) -- Ok'Hanu
-    distanceatheryte2 = DistanceBetween(fatex, fatey, fatez, -482, 123, 315) -- earth
-    distanceatheryte3 = DistanceBetween(fatex, fatey, fatez, 545, 115, 200) -- many
-    teleportath1 = "Ok'hanu"
-    teleportath2 = "Earthenshire"
-    teleportath3 = "Many Fires"
-    end
-
-    if IsInZone(1189) then     --Yak T'el
-    distanceatheryte1 = DistanceBetween(fatex, fatey, fatez, -400, 24, -431) -- Iq Br'aax
-    distanceatheryte2 = DistanceBetween(fatex, fatey, fatez, 720, -132, 527) -- Mamook
-    teleportath1 = "Iq Br'aax"
-    teleportath2 = "Mamook"
-    end
-
-    if IsInZone(1190) then      --Shaaloani
-    distanceatheryte1 = DistanceBetween(fatex, fatey, fatez, 390, 0, 465) -- Hhusatahwi
-    distanceatheryte2 = DistanceBetween(fatex, fatey, fatez, -295, 19, -115) -- Sheshenewezi Springs
-    distanceatheryte3 = DistanceBetween(fatex, fatey, fatez, 310, -15, -567) -- Mehwahhetsoan
-    teleportath1 = "Hhusatahwi"
-    teleportath2 = "Sheshenewezi Springs"
-    teleportath3 = "Mehwahhetsoan"
-    end
-
-    if IsInZone(1191) then      --Heritage Found
-    distanceatheryte1 = DistanceBetween(fatex, fatey, fatez, 515, 145, 210) -- Yyasulani Station
-    distanceatheryte2 = DistanceBetween(fatex, fatey, fatez, -221, 32, -583) -- The Outskirts
-    distanceatheryte3 = DistanceBetween(fatex, fatey, fatez, -222, 31, 123) -- Electrope Strike
-    teleportath1 = "Yyasulani Station"
-    teleportath2 = "The Outskirts"
-    teleportath3 = "Electrope Strike"
-    end
-
-    if IsInZone(1192) then      --Living Memory
-    distanceatheryte1 = DistanceBetween(fatex, fatey, fatez, 0, 56, 796) -- Leynode Mnemo
-    distanceatheryte2 = DistanceBetween(fatex, fatey, fatez, 659, 27, -285) -- Lleynode Pyro
-    distanceatheryte3 = DistanceBetween(fatex, fatey, fatez, -253, 56, -400) -- Lleynode Aero
-    teleportath1 = "Leynode Mnemo"
-    teleportath2 = "Leynode Pyro"
-    teleportath3 = "Leynode Aero"
-    end
-
-    comparisondist1 = (distanceatheryte1 - distancefly) + distanceleeway
-    comparisondist2 = (distanceatheryte2 - distancefly) + distanceleeway
-    comparisondist3 = (distanceatheryte3 - distancefly) + distanceleeway
-
-                if comparisondist1 < comparisondist2 and comparisondist1 < comparisondist3 and comparisondist1 < 0 then
-                    yield("/tp "..teleportath1)
-                    yield("/wait 8")
-                elseif comparisondist2 < comparisondist3 and comparisondist2 < 0 then
-                    yield("/tp "..teleportath2)
-                    yield("/wait 8")
-                elseif comparisondist3 < 0 then
-                    yield("/tp "..teleportath3)
-                    yield("/wait 8")
-                end
-                
+    return false
 end
 
---Gets the Location fo the Fate
-function FateLocation()
-    if GetCharacterCondition(45) == false then
-    fates = GetActiveFates()
-    minDistance = 100000
-    fateId = 0
+function IsOtherNpcFate(fateName)
+    for i, otherNpcFate in ipairs(SelectedZone.fatesList.otherNpcFates) do
+        if otherNpcFate.fateName == fateName then
+            return true
+        end
+    end
+    return false
+end
+
+function IsBlacklistedFate(fateName)
+    for i, blacklistedFate in ipairs(SelectedZone.fatesList.blacklistedFates) do
+        if blacklistedFate == fateName then
+            return true
+        end
+    end
+    return false
+end
+
+--Gets the Location of the next Fate. Prioritizes anything with progress above 0, then by shortest time left
+function SelectNextFate()
+    local fates = GetActiveFates()
+
+    local nextFate = nil
     for i = 0, fates.Count-1 do
-    tempfate = fates[i]
-    if GetFateDuration(fates[i]) > 0 and GetFateProgress(fates[i]) < CompletionToIgnoreFate and IsBlackListed(tempfate) == false then
-        distance = GetDistanceToPoint(GetFateLocationX(fates[i]), GetFateLocationY(fates[i]), GetFateLocationZ(fates[i]))
-    if distance < minDistance then
-        minDistance = distance
-        fateId = fates[i]
-        Fate2 = fateId
-    end
-    end
-end
-  
-fateX = GetFateLocationX(fateId)
-fateY = GetFateLocationY(fateId)+5
-fateZ = GetFateLocationZ(fateId)
-LogInfo(fateX.." , "..fateY.." , "..fateZ)
-yield("/wait 1")
-end
-end
---Paths to the Fate
-function FatePath()
-if fateX == 0 and fateY == 5 and fateZ == 0 then
-    noFate = true
-    yield("/vnavmesh stop")
-    yield("/wait 2")
-end
---Announcement for FateId
-if fateX ~= 0 and fateY ~= 5 and fateZ ~= 0 then
-    zoneid = GetZoneID()
-    noFate = false
-while GetCharacterCondition(26) == true do
-yield("/wait 1")
-end
-    
-CheckTeleport(fateId)
+        local tempFate = {
+            fateId = fates[i],
+            fateName = GetFateName(fates[i]),
+            progress = GetFateProgress(fates[i]),
+            duration = GetFateDuration(fates[i]),
+            startTime = GetFateStartTimeEpoch(fates[i]),
+            x = GetFateLocationX(fates[i]),
+            y = GetFateLocationY(fates[i]),
+            z = GetFateLocationZ(fates[i]),
+            isBonusFate = GetFateIsBonus(fates[i]),
+        }
+        tempFate.npcName = GetFateNpcName(tempFate.fateName)
+        LogInfo("[FATE] Considering fate #"..tempFate.fateId.." "..tempFate.fateName)
 
-    if noFate ~= true then
-    while IsInFate() == false and GetCharacterCondition(4) == false do
+        local currentTime = EorzeaTimeToUnixTime(GetCurrentEorzeaTimestamp())
+        if tempFate.startTime == 0 then
+            tempFate.timeLeft = 900
+        else
+            tempFate.timeElapsed = currentTime - tempFate.startTime
+            tempFate.timeLeft = tempFate.duration - tempFate.timeElapsed
+        end
+        LogInfo("[FATE] Time left on fate #:"..tempFate.fateId..": "..math.floor(tempFate.timeLeft//60).."min, "..math.floor(tempFate.timeLeft%60).."s")
+        
+        
+        if IsCollectionsFate(tempFate.fateName) then -- skip collections fates
+            LogInfo("[FATE] Skipping fate #"..tempFate.fateId.." "..tempFate.fateName.." due to being collections fate.")
+        elseif not IsBlacklistedFate(tempFate.fateName) then -- check fate is not blacklisted for any reason
+            if IsOtherNpcFate(tempFate.fateName) then
+                if tempFate.startTime > 0 then -- if someone already opened this fate, then treat is as all the other fates
+                    nextFate = SelectNextFateHelper(tempFate, nextFate)
+                else -- no one has opened this fate yet
+                    if nextFate == nil then -- pick this if there's nothing else
+                        nextFate = tempFate
+                    elseif tempFate.isBonusFate then
+                        nextFate = SelectNextFateHelper(tempFate, nextFate)
+                    elseif nextFate.startTime == 0 then -- both fates are unopened npc fates
+                        nextFate = SelectNextFateHelper(tempFate, nextFate)
+                    end
+                end
+            elseif IsBossFate(tempFate.fateName) then
+                if JoinBossFatesIfActive and tempFate.progress >= CompletionToJoinBossFate then
+                    nextFate = SelectNextFateHelper(tempFate, nextFate)
+                end
+            elseif tempFate.duration ~= 0 then -- else is normal fate. avoid unlisted talk to npc fates
+                nextFate = SelectNextFateHelper(tempFate, nextFate)
+            end
+            LogInfo("[FATE] Finished considering fate #"..tempFate.fateId.." "..tempFate.fateName)
+        end
+    end
+
+    LogInfo("[FATE] Finished considering all fates")
+
+    if nextFate == nil then
+        LogInfo("[FATE] No available fates found.")
+        yield("/echo [FATE] No available fates found.")
+    else
+        LogInfo("[FATE] Final selected fate #"..nextFate.fateId.." "..nextFate.fateName)
+    end
+    yield("/wait 1")
+
+    return nextFate
+end
+
+--Paths to the Fate
+function MoveToFate(nextFate)
+    LogInfo("[FATE] Moving to fate #"..nextFate.fateId.." "..nextFate.fateName)
+    yield("/echo [FATE] Moving to fate #"..nextFate.fateId.." "..nextFate.fateName)
+    if HasPlugin("ChatCoordinates") then
+        SetMapFlag(SelectedZone.zoneId, nextFate.x, nextFate.y, nextFate.z)
+    end
+
+    while GetCharacterCondition(CharacterCondition.inCombat) do
+        yield("/wait 1")
+    end
+
+    local playerPosition = {
+        x = GetPlayerRawXPos(),
+        y = GetPlayerRawYPos(),
+        z = GetPlayerRawZPos()
+    }
+    TeleportToClosestAetheryteToFate(playerPosition, nextFate)
+
+    while not IsInFate() and not GetCharacterCondition(CharacterCondition.mounted) do
         yield("/wait 3")
         yield('/gaction "mount roulette"')
         yield("/wait 3")
-    if GetCharacterCondition(4) == true and HasFlightUnlocked(zoneid) then
-        yield("/gaction jump")
-        yield("/wait 2")
+        if GetCharacterCondition(CharacterCondition.mounted) and not GetCharacterCondition(CharacterCondition.flying) and HasFlightUnlocked(SelectedZone.zoneId) then
+            yield("/gaction jump")
+            yield("/wait 2")
+        end
     end
-    end
-end
 
-    if HasFlightUnlocked(zoneid) then
-    PathfindAndMoveTo(fateX, fateY, fateZ, true)
+    if HasFlightUnlocked(SelectedZone.zoneId) then
+        LogInfo("[FATE] Moving to "..nextFate.x..", "..nextFate.y..", "..nextFate.z)
+        yield("/vnavmesh stop")
+        yield("/wait 1")
+        PathfindAndMoveTo(nextFate.x, nextFate.y, nextFate.z, true)
     else
-    PathfindAndMoveTo(fateX, fateY, fateZ)
+        LogInfo("[FATE] Moving to "..nextFate.x..", "..nextFate.y..", "..nextFate.z)
+        yield("/vnavmesh stop")
+        yield("/wait 1")
+        PathfindAndMoveTo(nextFate.x, nextFate.y, nextFate.z)
     end
-
-    if Announce == 2 then
-    yield("/echo [FATE] Moving to Fate: "..fateId)  
+    yield("/wait 2")
 end
 
---Announcement for gems
-if gcount == 0  and fateId ~= 0 and Announce == 1 or Announce == 2 then
-    yield("/echo [FATE] Gems: "..gems)
-    yield("/wait 0.5")
-    gcount = gcount +1
+function IsFateActive(fateId)
+    local activeFates = GetActiveFates()
+    for activeFateId in activeFates do
+        if fateId == activeFateId then
+            return true
+        end
+    end
+    return false
 end
-end
+
+function InteractWithFateNpc(fate)
+    while not IsInFate() do
+        yield("/wait 1")
+
+        while not IsInFate() and GetCharacterCondition(CharacterCondition.inCombat) do
+            TurnOnRSR()
+            yield("/battletarget")
+        end
+
+        while not HasTarget() and IsFateActive(fate.fateId) and not IsInFate() do -- break conditions in case someone snipes the interact before you
+            yield("/echo [FATE] Cannot find NPC target")
+            -- PathfindAndMoveTo(target.x, target.y, target.z)
+            -- yield("/target "..target.npcName)
+            yield("/target "..fate.npcName)
+            yield("/wait 1")
+        end
+
+        -- LogDebug("[FATE] Found fate NPC "..target.npcName..". Current distance: "..DistanceBetween(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), target.x, target.y, target.z))
+
+        yield("/lockon on")
+        yield("/automove")
+
+        while GetDistanceToTarget() > 5 and not IsInFate() do -- break conditions in case someone snipes the interact before you
+            yield("/wait 0.5")
+        end
+        yield("/vnavmesh stop")
+        yield("/wait 1")
+
+        while not IsAddonVisible("SelectYesno") and not IsInFate() and IsPlayerAvailable() do -- break conditions in case someone snipes the interact before you
+            yield("/interact")
+            yield("/wait 1")
+        end
+        if IsAddonVisible("SelectYesno") then
+            yield("/callback SelectYesno true 0")
+            yield("/wait 0.1")
+        end
+        -- wait until npc interaction is finished, then unselect the npc
+        while not IsPlayerAvailable() do
+            yield("/wait 1")
+        end
+        yield("/lockon off")
+        yield("/automove off")
+        yield("/wait 1") -- wait to register
+        while GetTargetName() == fate.npcName do
+            ClearTarget()
+            yield("/wait 1")
+        end
+    end
+    yield("/echo [FATE] Fate begun")
+    LogInfo("[FATE] Exiting InteractWithFateNpc")
 end
 
 --Paths to the enemy (for Meele)
-function enemyPathing()
+function EnemyPathing()
     while GetDistanceToTarget() > 3.5 do
         local enemy_x = GetTargetRawXPos()
         local enemy_y = GetTargetRawYPos()
         local enemy_z = GetTargetRawZPos()
-    if PathIsRunning() == false then 
-        PathfindAndMoveTo(enemy_x, enemy_y, enemy_z)
-    end
+        if PathIsRunning() == false then
+            PathfindAndMoveTo(enemy_x, enemy_y, enemy_z)
+        end
         yield("/wait 0.1")
     end
 end
-InstanceCount = 0
+
+CurrentInstance = 0
 --When there is no Fate 
-function noFateSafe()
-    if noFate == true then
-    if fcount == 0 then
-        yield("/echo [FATE] No Fate existing")
-        fcount = fcount +1
-    end
-
---Change Instance
-while GetCharacterCondition(26) == true do
-    yield("/wait 1")
-end
-if ChangeInstance == true and InstanceCount ~= 3 then
-yield("/wait 1")
-
-    yield("/target Aetheryte")
-    yield("/wait 1")
-
-    while HasTarget() == false do
-    if IsInZone(1187) then      --Urqopacha
-    yield("/tp Wachunpelo")
-    yield("/wait 7")
-    end
-    if IsInZone(1188) then      --Kozama'uka
-    yield("/tp Ok'hanu")
-    yield("/wait 7")
-    end
-    if IsInZone(1189) then      --Yak T'el
-    yield("/tp Iq Br'aax")
-    yield("/wait 7")
-    end
-    if IsInZone(1190) then      --Shaaloani
-        yield("/tp Hhusatahwi")
-        yield("/wait 7")
-    end 
-    if IsInZone(1191) then      --Heritage Found
-        yield("/tp The Outskirts")
-        yield("/wait 7")
-    end
-    if IsInZone(1192) then      --Living Memory
-        yield("/tp Leynode mnemo")
-        yield("/wait 7")
-    end
-    while GetCharacterCondition(45) do
-    yield("/wait 1")
-    end
-    yield("/target Aetheryte")
-    end
-
-    yield("/lockon")
-    yield("/automove")
-    while GetDistanceToTarget() > 15 do
-    yield("/wait 0.5")
-    if IsMoving() == false then
-    if GetTargetName() == "Aetheryte" then
-    yield("/target Aetheryte")
-    yield("/lockon")
-    end
-    yield("/automove")
-    end
-    end
-
-    while PathIsRunning() or PathfindInProgress() do
-    yield("/wait 1")
-    end
-    yield("/vnavmesh stop")
-    yield("/gaction dismount")
-    if GetCharacterCondition(45) == false and InstanceCount == 0 then
-    yield("/wait 0.5")
-    yield("/li 1")
-    yield("/wait 1")
-    end
-    if GetCharacterCondition(45) == false and InstanceCount == 1 then
-    yield("/wait 0.5")
-    yield("/li 2")
-    yield("/wait 1")
-    end
-    if GetCharacterCondition(45) == false and InstanceCount == 2 then
-    yield("/wait 0.5")
-    yield("/li 3")
-    yield("/wait 1")
-    end
-    if GetCharacterCondition(45) == false and IsPlayerAvailable() == true then
-    FateLocation()
-    yield("/lockon off")
-    yield("/automove off")
+function ChangeInstance()
+    --Change Instance
+    while GetCharacterCondition(CharacterCondition.inCombat) or GetCharacterCondition(CharacterCondition.transition) do
+        yield("/wait 1")
     end
     
-    if InstanceCount == 2 then
-       InstanceCount = 0
+    if EnableChangeInstance then
+        yield("/wait 1")
+
+        yield("/target aetheryte")
+        yield("/wait 1")
+
+        while not HasTarget() or GetTargetName() ~= "aetheryte" do
+            LogInfo("[FATE] Attempting to target aetheryte.")
+            local closestAetheryte = nil
+            local closestAetheryteDistance = math.maxinteger
+            for i, aetheryte in ipairs(SelectedZone.aetheryteList) do
+                -- GetDistanceToPoint is implemented with raw distance instead of distance squared
+                local distanceToAetheryte = GetDistanceToPoint(aetheryte.x, aetheryte.y, aetheryte.z)
+                if distanceToAetheryte < closestAetheryteDistance then
+                    closestAetheryte = aetheryte
+                    closestAetheryteDistance = distanceToAetheryte
+                end
+            end
+            TeleportTo(closestAetheryte.aetheryteName)
+
+            yield("/target Aetheryte")
+            yield("/wait 1")
+        end
+
+        while GetCharacterCondition(CharacterCondition.mounted) do
+            LogInfo("[FATE] Dismounting...")
+            yield("/gaction dismount")
+            yield("/wait 1")
+        end
+
+        yield("/lockon")
+        yield("/automove")
+        while GetDistanceToTarget() > 10 do
+            LogInfo("[FATE] Approaching aetheryte...")
+            yield("/wait 0.5")
+        end
+        yield("/automove off")
+
+        yield("/li "..CurrentInstance+1) -- start instance transfer
+        yield("/wait 1") -- wait for instance transfer to register
+        CurrentInstance = (CurrentInstance + 1) % 3
+        while GetCharacterCondition(CharacterCondition.transition) do -- wait for instance transfer to complete
+            LogInfo("[FATE] Waiting for instance transfer to complete...")
+            yield("/wait 1")
+        end
+        CurrentFate = SelectNextFate()
+        yield("/lockon off")
+    end
+end
+
+function AvoidEnemiesWhileFlying()
+    --If you get attacked it flies up
+    if GetCharacterCondition(CharacterCondition.inCombat) then
+        Name = GetCharacterName()
+        PlocX = GetPlayerRawXPos(Name)
+        PlocY = GetPlayerRawYPos(Name)+40
+        PlocZ = GetPlayerRawZPos(Name)
+        yield("/gaction jump")
+        yield("/wait 0.5")
+        yield("/vnavmesh stop")
+        yield("/wait 1")
+        PathfindAndMoveTo(PlocX, PlocY, PlocZ, true)
+        PathStop()
+        yield("/wait 2")
+    end
+end
+
+function TurnOnRSR()
+    Class = GetClassJobId()
+    
+    if Class == 21 or Class == 37 or Class == 19 or Class == 32 then -- tank classes
+        yield("/rotation auto")
+        yield("/rotation settings aoetype 1")
+    elseif Class == 24 then -- white mage holy OP
+        yield("/rotation manual")
+        yield("/rotation settings aoetype 2")
     else
-    InstanceCount = InstanceCount + 1
+        yield("/rotation manual")
+        yield("/rotation settings aoetype 3")
     end
-    if GetCharacterCondition(45) then
-    yield("/wait 1")
-    end
-end
-
---If you get attacked it flies up
-    if GetCharacterCondition(26) then
-    Name = GetCharacterName()
-    PlocX = GetPlayerRawXPos(Name)
-    PlocY = GetPlayerRawYPos(Name)+40
-    PlocZ = GetPlayerRawZPos(Name)
-    yield("/gaction jump")
-    yield("/wait 0.5")
-    PathfindAndMoveTo(PlocX, PlocY, PlocZ, true)
-    PathStop()
-    yield("/wait 2")
-    end
-  end
-  end
-
-function Rotation()
-Class = GetClassJobId()
-if Class ~= 21 and Class ~= 37 and Class ~= 19 then
-yield("/rotation manual")
-yield("/rotation settings aoetype 1")
-end
-if Class == 21 or Class == 37 or Class == 19 then
-yield("/rotation auto")
-yield("/rotation settings aoetype 2")
-end
 end
 
 function antistuck()
-stuck = 0
-PX = GetPlayerRawXPos()
-PY = GetPlayerRawYPos()
-PZ = GetPlayerRawZPos()
-yield("/wait 3")
-PXX = GetPlayerRawXPos()
-PYY = GetPlayerRawYPos()
-PZZ = GetPlayerRawZPos()
+    LogInfo("[FATE] Entered antistuck")
+    stuck = 0
+    PX = GetPlayerRawXPos()
+    PY = GetPlayerRawYPos()
+    PZ = GetPlayerRawZPos()
+    yield("/wait 3")
+    PXX = GetPlayerRawXPos()
+    PYY = GetPlayerRawYPos()
+    PZZ = GetPlayerRawZPos()
 
-if PX == PXX and PY == PYY and PZ == PZZ then
-while GetDistanceToTarget() > 3.5 and stuck < 20 do
-    local enemy_x = GetTargetRawXPos()
-    local enemy_y = GetTargetRawYPos()
-    local enemy_z = GetTargetRawZPos()
-if PathIsRunning() == false and GetCharacterCondition(4, false) then 
-    PathfindAndMoveTo(enemy_x, enemy_y, enemy_z)
-end
-if PathIsRunning() == false and GetCharacterCondition(4, true) then 
-    PathfindAndMoveTo(enemy_x, enemy_y, enemy_z, true)
-end
-    yield("/wait 0.5")
-    stuck = stuck + 1
-end
-if stuck >= 20 then
-yield("/vnavmesh stop")
-end
-stuck = 0
-end
-end
-
-function Death()
-if GetCharacterCondition(2) then --Condition Dead
-while not IsAddonVisible("SelectYesno") do --rez addon wait
-yield("/wait 1")
-end
-
-if IsAddonVisible("SelectYesno") then --rez addon yes
-    yield("/callback SelectYesno true 0")
-    yield("/wait 0.1")
+    if PX == PXX and PY == PYY and PZ == PZZ then
+        while GetDistanceToTarget() > 3.5 and stuck < 20 do
+            LogInfo("[FATE] Looping antistuck")
+            local enemy_x = GetTargetRawXPos()
+            local enemy_y = GetTargetRawYPos()
+            local enemy_z = GetTargetRawZPos()
+            if PathIsRunning() == false and GetCharacterCondition(4, false) then 
+                LogInfo("[FATE] Moving to enemy "..enemy_x..", "..enemy_y..", "..enemy_z)
+                yield("/vnavmesh stop")
+                yield("/wait 1")
+                PathfindAndMoveTo(enemy_x, enemy_y, enemy_z)
+            end
+            if not PathIsRunning() and GetCharacterCondition(4, true) then
+                LogInfo("[FATE] Moving to enemy "..enemy_x..", "..enemy_y..", "..enemy_z)
+                yield("/vnavmesh stop")
+                yield("/wait 1")
+                PathfindAndMoveTo(enemy_x, enemy_y, enemy_z, true)
+            end
+            yield("/wait 0.5")
+            stuck = stuck + 1
+        end
+        if stuck >= 20 then
+            yield("/vnavmesh stop")
+            yield("/wait 1")
+        end
+        stuck = 0
+    end
 end
 
-while GetCharacterCondition(45) do --wait between areas
-    yield("/wait 1")
+function HandleDeath()
+    if GetCharacterCondition(CharacterCondition.dead) then --Condition Dead
+        yield("/echo [FATE] You have died. Returning to home aetheryte.")
+        while not IsAddonVisible("SelectYesno") do --rez addon wait
+            yield("/wait 1")
+        end
+
+        if IsAddonVisible("SelectYesno") then --rez addon yes
+            yield("/callback SelectYesno true 0")
+            yield("/wait 0.1")
+        end
+
+        while GetCharacterCondition(CharacterCondition.casting) or GetCharacterCondition(CharacterCondition.transition) do --wait between areas
+            yield("/wait 1")
+        end
+
+        while GetCharacterCondition(CharacterCondition.dead) do --wait till alive
+            yield("/wait 1")
+        end
+
+        while not IsInZone(SelectedZone.zoneId) do
+            TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
+        end
+    end
 end
-
-while GetCharacterCondition(2) do --wait till alive
-yield("/wait 1")
-end
-
-yield("/tp "..teleport) --teleport
-yield("/wait 7")
-
-while GetCharacterCondition(45) do --wait between areas
-    yield("/wait 1")
-end
-end
-
-end
-
-
 
 ---------------------------Beginning of the Code------------------------------------
-gcount = 0
-cCount = 0
-fcount = 0
-Foodcheck = 0
-zoneid = GetZoneID()
 
 --vnavmesh building
-if NavIsReady() == false then
-yield("/echo [FATE] Building Mesh Please wait...")
+if not NavIsReady() then
+    yield("/echo [FATE] Building Mesh Please wait...")
 end
-while NavIsReady() == false do
-yield("/wait 1")
+while not NavIsReady() do
+    yield("/wait 1")
 end
 if NavIsReady() then
-yield("/echo [FATE] Mesh is Ready!")
+    yield("/echo [FATE] Mesh is Ready!")
 end
 
---Start of the Code
+-- turn on TextAdvance
+if HasPlugin("TextAdvance") then
+    yield("/at y")
+end
+
+GemAnnouncementCount = 0
+cCount = 0
+AvailableFateCount = 0
+FoodCheck = 0
+
+for i, zone in ipairs(FatesData) do
+    if SelectedZoneName == zone.zoneName then
+        SelectedZone = zone
+    end
+end
+if SelectedZone == nil then
+    yield("/echo [FATE] Could not find zone by the name of "..SelectedZoneName)
+end
+
+LastTeleportTimeStamp = 0
+
+--Start of the Loop
+
+LogInfo("[FATE] Starting fate farming script.")
+
 while true do
-gems = GetItemCount(26807)
-
---food usage
-if GetCharacterCondition(27) == false and GetCharacterCondition(45) == false then
-if not HasStatusId(48) and (Food == "" == false) and Foodcheck <= 10 and GetCharacterCondition(27) == false and GetCharacterCondition(45) == false then
-    while not HasStatusId(48) and (Food == "" == false) and Foodcheck <= 10 and GetCharacterCondition(27) == false and GetCharacterCondition(45) == false do
-    while GetCharacterCondition(27) == true or GetCharacterCondition(45) == true do
-    yield("/wait 1")
-    end
-        yield("/item " .. Food)
-        yield("/wait 2")
-        Foodcheck = Foodcheck + 1
-    end
-    if Foodcheck >= 10 then
-    yield("/echo [FATE] no Food left <se.1>")
-    end
-    if HasStatusId(48) then
-    Foodcheck = 0
-    end
-end
-end
----------------------------Notification tab--------------------------------------
-if gems > 1400 and cCount == 0 then
-    yield("/echo [FATE] You are Almost capped with ur Bicolor Gems! <se.3>")
-    yield("/wait 1")
-    cCount = cCount +1
-end
----------------------------Fate Pathing part--------------------------------------
-
-if IsPlayerAvailable() then
-FateLocation()
-FatePath()
-noFateSafe()
-Death()
-end
-
-Fate1 = fateId
--------------------------------Fate Pathing Process------------------------------
---Jumps when landing while pathing to a fate
-while PathIsRunning() or PathfindInProgress() and IsInFate() == false do
-    if GetCharacterCondition(4) and GetCharacterCondition(77) == false and HasFlightUnlocked(zoneid) then 
-        yield("/gaction jump")
-        yield("/wait 0.3")
+    LogInfo("[FATE] Starting new iteration.")
+    while not IsInZone(SelectedZone.zoneId) do
+        local teleport = SelectedZone.aetheryteList[1].aetheryteName
+        yield("/echo [FATE] Teleporting to "..teleport.." and resuming FATE farm.")
+        TeleportTo(teleport)
     end
 
---Stops Moving to dead Fates
-FateLocation()
+    gems = GetItemCount(26807)
 
-if Fate1 ~= Fate2 then
-if PathIsRunning() == false then
-    FateLocation()
-    FatePath()
-    yield("/wait 1")
-end
-    yield("/vnavmesh stop")
-    yield("/wait 0.5")
-end
---Stops Pathing when in Fate
-if PathIsRunning() and IsInFate() == true then
-    Rotation()
-    if fateId == 1919 then
-        yield("/wait 2")
+    --food usage
+    if not (GetCharacterCondition(CharacterCondition.casting) or GetCharacterCondition(CharacterCondition.transition)) then
+        if not HasStatusId(48) and (Food == "" == false) and FoodCheck <= 10 and not GetCharacterCondition(CharacterCondition.casting) and not GetCharacterCondition(CharacterCondition.transition) then
+            while not HasStatusId(48) and (Food == "" == false) and FoodCheck <= 10 and not GetCharacterCondition(CharacterCondition.casting) and not GetCharacterCondition(CharacterCondition.transition) do
+                while GetCharacterCondition(CharacterCondition.casting) or GetCharacterCondition(CharacterCondition.transition) do
+                    yield("/wait 1")
+                end
+                yield("/item " .. Food)
+                yield("/wait 2")
+                FoodCheck = FoodCheck + 1
+            end
+            if FoodCheck >= 10 then
+                yield("/echo [FATE] no Food left <se.1>")
+            end
+            if HasStatusId(48) then
+                FoodCheck = 0
+            end
+        end
     end
-    yield("/wait "..fatewait)
-    yield("/vnavmesh stop")
-    yield("/wait 0.5")
-end
-end
 
---Path stops when there is no fate 
-if noFate == true and PathIsRunning() or PathfindInProgress() then
-    yield("/vnavmesh stop")
-    yield("/wait 2")
-end
---Dismounting upon arriving in fate
-while IsInFate() and GetCharacterCondition(4) do
-    yield("/gaction dismount")
-    yield("/wait 0.3")
-    yield("/vnavmesh stop")
-    antistuck()
-end
--------------------------------Fate----------------------------------------------
---Dismounts when in fate
-bmaiactive = false
+    ---------------------------Notification tab--------------------------------------
+    if gems > 1400 and cCount == 0 then
+        yield("/echo [FATE] You are almost capped with ur Bicolor Gems! <se.3>")
+        yield("/wait 1")
+        cCount = cCount +1
+    end
+    ---------------------------Select and Move to Fate--------------------------------------
 
-while IsInFate() do
-    InstanceCount = 0
-    yield("/vnavmesh stop")
-    if GetCharacterCondition(4) == true then
+    while not IsPlayerAvailable() do
+        -- wait for player to be avialable
+        LogInfo("[FATE] Waiting for player to be available.")
+        yield("/wait 1")
+    end
+
+    CurrentFate = SelectNextFate() -- init first fate object
+
+    -- if has twist of fate buff, stay in current instance and search for more fates
+    -- while loop allows you to click off the buff
+    while CurrentFate == nil and WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289)) do
+        LogInfo("[FATE] Staying in instance due to Twist of Fate buff.")
+        yield("/echo [FATE] Staying in instance due to Twist of Fate bonus buff.")
+        yield("/wait 30")
+        CurrentFate = SelectNextFate()
+    end
+    while CurrentFate == nil do
+        LogInfo("[FATE] Changing instances.")
+        ChangeInstance()
+    end
+    
+    --Announcement for gems
+    if GemAnnouncementCount == 0  and CurrentFate.fateId ~= 0 and Announce == 1 or Announce == 2 then
+        LogInfo("[FATE] Gems: "..gems)
+        yield("/wait 0.5")
+        GemAnnouncementCount = GemAnnouncementCount +1
+    end
+    MoveToFate(CurrentFate)
+
+    HandleDeath()
+
+    ---------------------------- While vnavmesh is Moving ------------------------------
+
+    -- while vnavmesh is moving to a fate
+    while PathIsRunning() or PathfindInProgress() and not IsInFate() do
+        
+        -- if mounted on land, jump to fly
+        if GetCharacterCondition(CharacterCondition.mounted) and not GetCharacterCondition(CharacterCondition.flying) and HasFlightUnlocked(SelectedZone.zoneId) then 
+            yield("/gaction jump")
+            yield("/wait 0.3")
+        end
+
+        --Stops Moving to dead Fates or change paths to better fates
+        NextFate = SelectNextFate()
+        if NextFate~=nil and CurrentFate.fateId ~= NextFate.fateId then
+            yield("/echo [FATE] Stopped pathing to #"..CurrentFate.fateId.." "..CurrentFate.fateName..", higher priority fate found: #"..NextFate.fateId.." "..NextFate.fateName)
+            yield("/vnavmesh stop")
+            yield("/wait 1")
+            CurrentFate = NextFate
+            if not PathIsRunning() then
+                MoveToFate(CurrentFate)
+                yield("/wait 1")
+            end
+        end
+
+        -- Stops Pathing when at or close to Fate, because navmesh sometimes can't get to distance 0
+        if PathIsRunning() then
+            if IsInFate() or
+               (IsOtherNpcFate(CurrentFate.fateName) and CurrentFate.startTime == 0 and GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 5) then
+                LogInfo("[FATE] Stopping nav, arrriving at fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
+                yield("/echo Arrived at fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
+                yield("/vnavmesh stop")
+                yield("/wait "..fatewait)
+                yield("/wait 1")
+            end
+        end
+    end
+
+    --Dismounting upon arriving at fate
+    while GetCharacterCondition(CharacterCondition.mounted) and
+          (IsInFate() or (IsOtherNpcFate(CurrentFate.fateName) and CurrentFate.startTime == 0 and GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 20))
+    do
+        yield("/echo [FATE] Arrived at fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
+        LogInfo("[FATE] Arrived at Fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
         yield("/vnavmesh stop")
-        yield("/gaction dismount")
-        yield("/wait 2")
+        if GetCharacterCondition(CharacterCondition.flying) then
+            yield("/echo Landing...")
+            yield("/gaction dismount") -- first dismount call only lands the mount
+            while GetCharacterCondition(CharacterCondition.flying) do
+                yield("/wait 1")
+            end
+        end
+        yield("/echo Dismounting...")
+        yield("/gaction dismount") -- actually dismount
+        yield("/wait 1")
+        antistuck()
+    end
+
+    -- need to talk to npc to start fate
+    if IsOtherNpcFate(CurrentFate.fateName) and CurrentFate.startTime == 0 and
+       GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 20
+    then
+        InteractWithFateNpc(CurrentFate)
+    end
+
+    TurnOnRSR()
+    yield("/wait 3")
+
+    -------------------------------Engage Fate Combat--------------------------------------------
+    bossModAIActive = false
+
+    while IsInFate() do
+        CurrentInstance = 0
         yield("/vnavmesh stop")
+        yield("/wait 1")
+        while GetCharacterCondition(CharacterCondition.mounted) do
+            yield("/gaction dismount")
+            yield("/wait 1")
+        end
+
+        --Activates Bossmod upon landing in a fate
+        if not GetCharacterCondition(CharacterCondition.mounted) and not bossModAIActive then 
+            if useBMR then
+                yield("/bmrai on")
+                yield("/bmrai followtarget on")
+                yield("/bmrai followcombat on")
+                yield("/bmrai followoutofcombat on")
+                bossModAIActive = true
+                yield("/wait 3")
+            end
+        end
+
+        --Paths to enemys when Bossmod is disabled
+        if not useBMR then 
+            EnemyPathing()
+        end
+        yield("/vnavmesh stop")
+        yield("/wait 1")
+        AvailableFateCount = 0
+        GemAnnouncementCount = 0
+        cCount = 0
+        antistuck()
+        if GetCharacterCondition(CharacterCondition.dead) then
+            HandleDeath()
+        end
+
+        -- switches to targeting forlorns for bonus (if present)
+        yield("/target Forlorn Maiden")
+        yield("/target The Forlorn")
     end
 
---Activates Bossmod upon landing in a fate
-if GetCharacterCondition(4) == false and bmaiactive == false then 
-    if BMR == true then
-        yield("/bmrai on")
-        yield("/bmrai followtarget on")
-        yield("/bmrai followcombat on")
-        yield("/bmrai followoutofcombat on")
-        bmaiactive = true
+    --Disables bossmod when the fate is over
+    if not IsInFate() and bossModAIActive then 
+        if useBMR then
+            yield("/bmrai off")
+            yield("/bmrai followtarget off")
+            yield("/bmrai followcombat off")
+            yield("/bmrai followoutofcombat off")
+            bossModAIActive = false
+        end
     end
-end
+    yield("/echo [FATE] No longer in fate.")
 
---Paths to enemys when Bossmod is disabled
-    if BMR == false then 
-    enemyPathing()
+    -----------------------------After Fate------------------------------------------
+    while GetCharacterCondition(CharacterCondition.inCombat) do
+        yield("/echo [FATE] Still in combat.")
+        yield("/wait 1")
     end
-    yield("/vnavmesh stop")
-    yield("/wait 1")
-    fcount = 0
-    gcount = 0
-    cCount = 0
-    antistuck()
-    Death()
-end
+    yield("/echo [FATE] Out of combat.")
 
---Disables bossmod when the fate is over
-if IsInFate() == false and bmaiactive == true then 
-    if BMR == true then
-        yield("/bmrai off")
-        yield("/bmrai followtarget off")
-        yield("/bmrai followcombat off")
-        yield("/bmrai followoutofcombat off")
-        bmaiactive = false
+    --Repair function
+    if RepairAmount > 0 and not GetCharacterCondition(CharacterCondition.mounted) then
+        if NeedsRepair(RepairAmount) then
+            while not IsAddonVisible("Repair") do
+                LogInfo("[FATE] Opening repair menu...")
+                yield("/generalaction repair")
+                yield("/wait 0.5")
+            end
+            yield("/callback Repair true 0")
+            yield("/wait 0.1")
+            if IsAddonVisible("SelectYesno") then
+                yield("/callback SelectYesno true 0")
+                yield("/wait 0.1")
+            end
+            while GetCharacterCondition(CharacterCondition.occupied39) do
+                LogInfo("[FATE] Repairing...")
+                yield("/wait 1") 
+            end
+            yield("/wait 1")
+            yield("/callback Repair true -1")
+        end
     end
-end
 
------------------------------After Fate------------------------------------------
-while GetCharacterCondition(26) do
-yield("/wait 1")
-end
---Repair function
-if RepairAmount > 0 and GetCharacterCondition(4) == false then
-    if NeedsRepair(RepairAmount) then
-    while not IsAddonVisible("Repair") do
-    yield("/generalaction repair")
-    yield("/wait 0.5")
+    --Materia Extraction function
+    if ExtractMateria and not GetCharacterCondition(CharacterCondition.mounted) then
+        if CanExtractMateria(100) then
+            yield("/generalaction \"Materia Extraction\"")
+            yield("/waitaddon Materialize")
+            while CanExtractMateria(100) == true and GetInventoryFreeSlotCount() > 1 do
+                LogInfo("[FATE] Extracting materia...")
+                if not IsAddonVisible("Materialize") then
+                    yield("/generalaction \"Materia Extraction\"")
+                end
+                yield("/pcall Materialize true 2")
+                yield("/wait 0.5")
+                if IsAddonVisible("MaterializeDialog") then
+                    yield("/pcall MaterializeDialog true 0")
+                    yield("/wait 0.1")
+                end
+                while GetCharacterCondition(39) do
+                    yield("/wait 0.5")
+                end
+            end 
+            yield("/wait 1")
+            yield("/pcall Materialize true -1")
+            yield("/echo [FATE] Extracted all materia")
+            yield("/wait 1")
+        end
     end
-    yield("/callback Repair true 0")
-    yield("/wait 0.1")
-if IsAddonVisible("SelectYesno") then
-    yield("/callback SelectYesno true 0")
-    yield("/wait 0.1")
-end
-while GetCharacterCondition(39) do 
-    yield("/wait 1") 
-end
-    yield("/wait 1")
-    yield("/callback Repair true -1")
-end
-end
 
---Materia Extraction function
-if ExtractMateria == true  and GetCharacterCondition(4) == false then
-if CanExtractMateria(100) then
-    yield("/generalaction \"Materia Extraction\"")
-    yield("/waitaddon Materialize")
-while CanExtractMateria(100) == true do
-    if not IsAddonVisible("Materialize") then
-    yield("/generalaction \"Materia Extraction\"")
-    end
-    yield("/pcall Materialize true 2")
-    yield("/wait 0.5")
-if IsAddonVisible("MaterializeDialog") then
-    yield("/pcall MaterializeDialog true 0")
-    yield("/wait 0.1")
-end
-while GetCharacterCondition(39) do
-    yield("/wait 0.5")
-end
-end 
-    yield("/wait 1")
-    yield("/pcall Materialize true -1")
-    yield("/echo [FATE] Extracted all materia")
-    yield("/wait 1")
-end
-end
-
-if CanExtractMateria(100) and Extract == true and GetCharacterCondition(27) == false then
+    if CanExtractMateria(100) and Extract and not GetCharacterCondition(CharacterCondition.casting) then
         yield("/generalaction \"Materia Extraction\"")
         yield("/waitaddon Materialize")
-    while CanExtractMateria(100) == true and GetCharacterCondition(27) == false do
-        if not IsAddonVisible("Materialize") then
-        yield("/generalaction \"Materia Extraction\"")
-        end
-        yield("/pcall Materialize true 2")
-        yield("/wait 0.5")
-    if IsAddonVisible("MaterializeDialog") then
-        yield("/pcall MaterializeDialog true 0")
-        yield("/wait 0.1")
-    end
-    while GetCharacterCondition(39) do
-        yield("/wait 0.5")
-    end
-    end 
+        while CanExtractMateria(100) == true and not GetCharacterCondition(CharacterCondition.casting) and GetInventoryFreeSlotCount() > 1 do
+            LogInfo("[FATE] Extracting materia 2...")
+            if not IsAddonVisible("Materialize") then
+                yield("/generalaction \"Materia Extraction\"")
+            end
+                yield("/pcall Materialize true 2")
+                yield("/wait 0.5")
+            if IsAddonVisible("MaterializeDialog") then
+                yield("/pcall MaterializeDialog true 0")
+                yield("/wait 0.1")
+            end
+            while GetCharacterCondition(39) do
+                yield("/wait 0.5")
+            end
+        end 
         yield("/wait 1")
         yield("/pcall Materialize true -1")
         yield("/echo [FATE] Extracted all materia")
         yield("/wait 1")
     end
 
---Retainer Process
-if Retainers == true and GetCharacterCondition(26) == false then 
-    if ARRetainersWaitingToBeProcessed() == true then
-        while not IsInZone(129) do
-        yield("/tp limsa")
-        yield("/wait 7")
-        end
-        while IsPlayerAvailable() == false and NavIsReady() == false do
-        yield("/wait 1")
-        end
-        if IsPlayerAvailable() and NavIsReady() then
-        PathfindAndMoveTo(-122.7251, 18.0000, 20.3941)
-        yield("/wait 1")
-        end
-        while PathIsRunning() or PathfindInProgress() do
-        yield("/wait 1")
-        end
-        if PathIsRunning() == false or PathfindInProgress() == false then
-        PathfindAndMoveTo(-122.7251, 18.0000, 20.3941)
-        yield("/wait 1")
-        end
-        yield("/target Summoning Bell")
-        while GetTargetName() == "" do
-        yield("/target Summoning Bell")
-        end 
-        while GetTargetName() == "Summoning Bell" and GetDistanceToTarget() > 4.5 do
-            PathfindAndMoveTo(-122.7251, 18.0000, 20.3941)
-            yield("/wait 1")
+    --Retainer Process
+    if Retainers and not GetCharacterCondition(CharacterCondition.inCombat) then 
+        LogInfo("[FATE] Handling retainers...")
+        if ARRetainersWaitingToBeProcessed() == true then
+            while not IsInZone(129) do
+                TeleportTo("Limsa Lominsa Lower Decks")
+            end
+            while IsPlayerAvailable() == false and NavIsReady() == false do
+                yield("/wait 1")
+            end
+            if IsPlayerAvailable() and NavIsReady() then
+                PathfindAndMoveTo(-122.7251, 18.0000, 20.3941)
+                yield("/wait 1")
+            end
             while PathIsRunning() or PathfindInProgress() do
                 yield("/wait 1")
             end
-        end
-        if GetTargetName() == "Summoning Bell" and GetDistanceToTarget() <= 4.5 then
-        yield("/wait 0.5")
-        yield("/interact")
-        if IsAddonVisible("RetainerList") then
-        yield("/ays e")
-        yield("/echo [FATE] Processing retainers")
-        yield("/wait 1")
-        end
-        end
-       
-        while ARRetainersWaitingToBeProcessed() == true do
-            yield("/wait 1")
-        end
-
-        yield("/wait 1")
-        yield("/waitaddon RetainerList")
-        yield("/echo [FATE] Finished processing retainers")
-        yield("/wait 1")
-        yield("/callback RetainerList true -1")
-        yield("/wait 1")
-        while IsInZone(129) do
-        if IsAddonVisible("RetainerList") then
-        yield("/callback RetainerList true -1")
-        yield("/wait 1")
-        end
-
-        --Deliveroo
-        if GetInventoryFreeSlotCount() < slots and TurnIn == true then
-            yield("/li gc")
-            end
-            while DeliverooIsTurnInRunning() == false do
-                yield("/wait 1")
-                yield("/deliveroo enable")
-            end
-            if DeliverooIsTurnInRunning() then
-            yield("/vnav stop")
-            end
-            while DeliverooIsTurnInRunning() do
+            if PathIsRunning() == false or PathfindInProgress() == false then
+                PathfindAndMoveTo(-122.7251, 18.0000, 20.3941)
                 yield("/wait 1")
             end
-        end
-
-        yield("/tp "..teleport)
-        yield("/wait 7")
-
-        while GetCharacterCondition(45) do
-            yield("/wait 1")
-        end
-        yield("/wait 1")
-    end
-end
-
-
-------------------------------Vouchers-----------------------------------------------
---old Vouchers!
-if gems > 1400 and Exchange == true and OldV == true then
-    yield("/tp Old Sharlayan")
-    yield("/wait 7")
-while GetCharacterCondition(45) == true do
-    yield("/wait 0.5")
-end
-if IsInZone(962) then
-    while PathIsRunning() == false or PathfindInProgress() == false do
-    PathfindAndMoveTo(72.497, 5.1499, -33.533)
-    end
-    yield("/wait 2")
-while GetCharacterCondition(31) == false do
-    yield("/target Gadfrid")
-    yield("/wait 1")
-    yield("/interact")
-    yield("/click Talk Click") 
-    yield("/wait 1")
-end
-if GetCharacterCondition(31) == true then
-    yield("/callback ShopExchangeCurrency false 0 5 13") --Change the last number "13" to the amount u want to buy 
-    yield("/wait 1")
-    yield("/callback SelectYesno true 0")
-    yield("/wait 1")
-    yield("/callback ShopExchangeCurrency true -1")
-    yield("/wait 1")
-    yield("/tp "..teleport)
-    yield("/wait 7")
-while GetCharacterCondition(45) do
-    yield("/wait 1")
-end
-end
-end
-end
-
---new Vouchers!
-if gems > 1400 and Exchange == true and OldV == false then
-while not IsInZone(1186) do
-    yield("/tp Solution Nine")
-    yield("/wait 7")
-        
-    while GetCharacterCondition(45) == true do
-        yield("/wait 0.5")
-    end
-end
-if IsInZone(1186) then
-
-    while IsPlayerAvailable() == false or NavIsReady() == false do
-        yield("/wait 1")
-    end
-
-    while GetCharacterCondition(45) == false do
-        yield("/li Nexus Arcade")
-        yield("/wait 2")
-    end
-
-    while GetCharacterCondition(45) == true or GetCharacterCondition(32) == true do
-        yield("/wait 1")
-    end
-
-    if IsPlayerAvailable() == true and GetCharacterCondition(45) == false or GetCharacterCondition(32) == false then
-        yield("/wait 1")
-        PathfindAndMoveTo(-198.466, 0.922, -6.955) --NPC
-        yield("/wait 1")
-    end
-
-    while PathIsRunning() == true or PathfindInProgress() == true do
-        yield("/wait 1")
-        while GetDistanceToPoint(-198.466, 0.922, -6.955) > 10 and GetDistanceToPoint(-198.466, 0.922, -6.955) < 15 do
-            PathfindAndMoveTo(-198.466, 0.922, -6.955)
-            yield("/echo [FATE] Repathing")
-            yield("/wait 1")
-        end
-    end
-
-    if IsInZone(1186) and PathIsRunning() == false or PathfindInProgress() == false then
-        yield("/target Beryl")
-        yield("/wait 0.5")
-            
-        while IsInZone(1186) and not IsAddonVisible("ShopExchangeCurrency") do
-            yield("/interact")
+            yield("/target Summoning Bell")
+            while GetTargetName() == "" do
+            yield("/target Summoning Bell")
+            end 
+            while GetTargetName() == "Summoning Bell" and GetDistanceToTarget() > 4.5 do
+                PathfindAndMoveTo(-122.7251, 18.0000, 20.3941)
+                yield("/wait 1")
+                while PathIsRunning() or PathfindInProgress() do
+                    yield("/wait 1")
+                end
+            end
+            if GetTargetName() == "Summoning Bell" and GetDistanceToTarget() <= 4.5 then
             yield("/wait 0.5")
-            yield("/click Talk Click")
+            yield("/interact")
+            if IsAddonVisible("RetainerList") then
+            yield("/ays e")
+            yield("/echo [FATE] Processing retainers")
             yield("/wait 1")
-        end
+            end
+            end
+        
+            while ARRetainersWaitingToBeProcessed() == true do
+                yield("/wait 1")
+            end
 
-if IsInZone(1186) and GetCharacterCondition(31) == true and IsAddonVisible("ShopExchangeCurrency") then
-    yield("/callback ShopExchangeCurrency false 0 5 13") --Change the last number "13" to the amount you want to buy. Change the third number "5" to the item you want to buy (the first item will be 0 then 1, 2, 3 and so on )
-    yield("/wait 0.5")
-    yield("/callback SelectYesno true 0")
-    yield("/wait 0.5")
-    yield("/callback ShopExchangeCurrency true -1")
-    yield("/wait 1")
-    yield("/tp "..teleport)
-    yield("/wait 7")
-        while GetCharacterCondition(45) do
             yield("/wait 1")
+            yield("/waitaddon RetainerList")
+            yield("/echo [FATE] Finished processing retainers")
+            yield("/wait 1")
+            yield("/callback RetainerList true -1")
+            yield("/wait 1")
+            while IsInZone(129) do
+                if IsAddonVisible("RetainerList") then
+                    yield("/callback RetainerList true -1")
+                    yield("/wait 1")
+                end
+
+                --Deliveroo
+                if GetInventoryFreeSlotCount() < slots and TurnIn == true then
+                    yield("/li gc")
+                end
+                while DeliverooIsTurnInRunning() == false do
+                    yield("/wait 1")
+                    yield("/deliveroo enable")
+                end
+                if DeliverooIsTurnInRunning() then
+                    yield("/vnavmesh stop")
+                end
+                while DeliverooIsTurnInRunning() do
+                    yield("/wait 1")
+                end
+            end
         end
     end
+
+
+    ------------------------------Vouchers-----------------------------------------------
+    --old Vouchers!
+    if gems > 1400 and Exchange == true and OldV == true then
+        LogInfo("[FATE] Exchanging for old vouchers.")
+        TeleportTo("Old Sharlayan")
+        yield("/wait 7")
+        while GetCharacterCondition(CharacterCondition.transition) == true do
+            yield("/wait 0.5")
+        end
+        if IsInZone(962) then
+            while PathIsRunning() == false or PathfindInProgress() == false do
+                PathfindAndMoveTo(72.497, 5.1499, -33.533)
+            end
+            yield("/wait 2")
+            while GetCharacterCondition(31) == false do
+                yield("/target Gadfrid")
+                yield("/wait 1")
+                yield("/interact")
+                yield("/click Talk Click") 
+                yield("/wait 1")
+            end
+            if GetCharacterCondition(31) == true then
+                yield("/callback ShopExchangeCurrency false 0 5 13") --Change the last number "13" to the amount u want to buy 
+                yield("/wait 1")
+                yield("/callback SelectYesno true 0")
+                yield("/wait 1")
+                yield("/callback ShopExchangeCurrency true -1")
+                yield("/wait 1")
+            end
+        end
     end
+
+    --new Vouchers!
+    if gems > 1400 and Exchange == true and OldV == false then
+        LogInfo("[FATE] Exchanging for new vouchers.")
+        while not IsInZone(1186) do
+            TeleportTo("Solution Nine")
+            yield("/wait 7")
+                
+            while GetCharacterCondition(CharacterCondition.transition) == true do
+                yield("/wait 0.5")
+            end
+        end
+        if IsInZone(1186) then
+
+            while IsPlayerAvailable() == false or NavIsReady() == false do
+                yield("/wait 1")
+            end
+
+            while GetCharacterCondition(CharacterCondition.transition) == false do
+                yield("/li Nexus Arcade")
+                yield("/wait 2")
+            end
+
+            while GetCharacterCondition(CharacterCondition.transition) == true or GetCharacterCondition(32) == true do
+                yield("/wait 1")
+            end
+
+            if IsPlayerAvailable() == true and GetCharacterCondition(CharacterCondition.transition) == false or GetCharacterCondition(32) == false then
+                yield("/wait 1")
+                PathfindAndMoveTo(-198.466, 0.922, -6.955) --NPC
+                yield("/wait 1")
+            end
+
+            while PathIsRunning() == true or PathfindInProgress() == true do
+                yield("/wait 1")
+                while GetDistanceToPoint(-198.466, 0.922, -6.955) > 10 and GetDistanceToPoint(-198.466, 0.922, -6.955) < 15 do
+                    PathfindAndMoveTo(-198.466, 0.922, -6.955)
+                    yield("/echo [FATE] Repathing")
+                    yield("/wait 1")
+                end
+            end
+
+            if IsInZone(1186) and PathIsRunning() == false or PathfindInProgress() == false then
+                yield("/target Beryl")
+                yield("/wait 0.5")
+            
+                while IsInZone(1186) and not IsAddonVisible("ShopExchangeCurrency") do
+                    yield("/interact")
+                    yield("/wait 0.5")
+                    yield("/click Talk Click")
+                    yield("/wait 1")
+                end
+
+                if IsInZone(1186) and GetCharacterCondition(31) == true and IsAddonVisible("ShopExchangeCurrency") then
+                    yield("/callback ShopExchangeCurrency false 0 5 13") --Change the last number "13" to the amount you want to buy. Change the third number "5" to the item you want to buy (the first item will be 0 then 1, 2, 3 and so on )
+                    yield("/wait 0.5")
+                    yield("/callback SelectYesno true 0")
+                    yield("/wait 0.5")
+                    yield("/callback ShopExchangeCurrency true -1")
+                    yield("/wait 1")
+                    yield("/tp "..teleport)
+                    yield("/wait 7")
+                    while GetCharacterCondition(CharacterCondition.transition) do
+                        yield("/wait 1")
+                    end
+                end
+            end
+        end
     end
-end
 end
