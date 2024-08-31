@@ -740,6 +740,11 @@ function InteractWithFateNpc(fate)
     while not IsInFate() do
         yield("/wait 1")
 
+        while not IsInFate() and GetCharacterCondition(CharacterCondition.inCombat) do
+            TurnOnRSR()
+            yield("/battletarget")
+        end
+
         while not HasTarget() and not IsInFate() do -- break conditions in case someone snipes the interact before you
             yield("/echo [FATE] Cannot find NPC target")
             -- PathfindAndMoveTo(target.x, target.y, target.z)
