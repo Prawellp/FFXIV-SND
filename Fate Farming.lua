@@ -736,6 +736,16 @@ function MoveToFate(nextFate)
     yield("/wait 2")
 end
 
+function IsFateActive(fateId)
+    local activeFates = GetActiveFates()
+    for activeFateId in activeFates do
+        if fateId == activeFateId then
+            return true
+        end
+    end
+    return false
+end
+
 function InteractWithFateNpc(fate)
     while not IsInFate() do
         yield("/wait 1")
@@ -745,7 +755,7 @@ function InteractWithFateNpc(fate)
             yield("/battletarget")
         end
 
-        while not HasTarget() and not IsInFate() do -- break conditions in case someone snipes the interact before you
+        while not HasTarget() and IsFateActive(fate.fateId) and not IsInFate() do -- break conditions in case someone snipes the interact before you
             yield("/echo [FATE] Cannot find NPC target")
             -- PathfindAndMoveTo(target.x, target.y, target.z)
             -- yield("/target "..target.npcName)
