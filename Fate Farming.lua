@@ -216,7 +216,7 @@ FatesData = {
     },
     {
         zoneName = "Azys Lla",
-        zoneId = 398,
+        zoneId = 402,
         aetheryteList = {
             { aetheryteName="Helix", x=-722.8046, y=-182.29956, z=-593.40814 }
         },
@@ -230,7 +230,7 @@ FatesData = {
     },
     {
         zoneName = "The Dravanian Forelands",
-        zoneId = 402,
+        zoneId = 398,
         aetheryteList = {
             { aetheryteName="Tailfeather", x=532.6771, y=-48.722107, z=30.166992 },
             { aetheryteName="Anyx Trine", x=-304.12756, y=-16.70868, z=32.059082 }
