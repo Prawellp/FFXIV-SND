@@ -712,20 +712,17 @@ function ChangeInstance()
             yield("/wait 1")
         end
 
+        while GetCharacterCondition(CharacterCondition.mounted) do
+            yield("/gaction dismount")
+            yield("/wait 1")
+        end
+
         yield("/lockon")
         yield("/automove")
         while GetDistanceToTarget() > 10 do
             yield("/wait 0.5")
         end
         yield("/automove off")
-
-        if GetCharacterCondition(CharacterCondition.mounted) then
-            yield("/gaction dismount")
-            yield("/wait 1") -- wait for dismount to register
-            while GetCharacterCondition(CharacterCondition.jumping) do
-                yield("/wait 1") -- wait for dismount to finish
-            end
-        end
 
         yield("/li "..CurrentInstance+1) -- start instance transfer
         yield("/wait 1") -- wait for instance transfer to register
@@ -1006,9 +1003,9 @@ while true do
         CurrentInstance = 0
         yield("/vnavmesh stop")
         yield("/wait 1")
-        if GetCharacterCondition(CharacterCondition.mounted) then
+        while GetCharacterCondition(CharacterCondition.mounted) do
             yield("/gaction dismount")
-            yield("/wait 2")
+            yield("/wait 1")
         end
 
         --Activates Bossmod upon landing in a fate
