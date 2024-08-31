@@ -759,7 +759,7 @@ function InteractWithFateNpc(fate)
         yield("/vnavmesh stop")
         yield("/wait 1")
 
-        while not IsAddonVisible("SelectYesno") and not IsInFate() do -- break conditions in case someone snipes the interact before you
+        while not IsAddonVisible("SelectYesno") and not IsInFate() and IsPlayerAvailable() do -- break conditions in case someone snipes the interact before you
             yield("/interact")
             yield("/wait 1")
         end
@@ -778,13 +778,9 @@ function InteractWithFateNpc(fate)
             ClearTarget()
             yield("/wait 1")
         end
-        while not IsInFate() do
-            yield("/wait 1")
-        end
-        LogInfo("[FATE] Exiting InteractWithFateNpc")
     end
     yield("/echo [FATE] Fate begun")
-    LogInfo("[FATE] Target before leaving InteractWithFateNpc: "..GetTargetName())
+    LogInfo("[FATE] Exiting InteractWithFateNpc")
 end
 
 --Paths to the enemy (for Meele)
@@ -891,6 +887,7 @@ function TurnOnRSR()
 end
 
 function antistuck()
+    LogInfo("[FATE] Entered antistuck")
     stuck = 0
     PX = GetPlayerRawXPos()
     PY = GetPlayerRawYPos()
@@ -902,6 +899,7 @@ function antistuck()
 
     if PX == PXX and PY == PYY and PZ == PZZ then
         while GetDistanceToTarget() > 3.5 and stuck < 20 do
+            LogInfo("[FATE] Looping antistuck")
             local enemy_x = GetTargetRawXPos()
             local enemy_y = GetTargetRawYPos()
             local enemy_z = GetTargetRawZPos()
