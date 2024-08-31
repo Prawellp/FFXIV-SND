@@ -1432,5 +1432,11 @@ while true do
                 end
             end
         end
+
+        while not IsInZone(SelectedZone.zoneId) do
+            local teleport = SelectedZone.aetheryteList[1].aetheryteName
+            yield("/echo [FATE] Teleporting to "..teleport.." and resuming FATE farm.")
+            TeleportTo(teleport)
+        end
     end
 end
