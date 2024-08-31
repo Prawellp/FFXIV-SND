@@ -8,10 +8,12 @@
 
   ***********
   * Version *
-  *  0.2.4  *
+  *  1.0.0  *
   ***********
     -> 1.0.0    Code changes
                     added pathing priority to prefer bonus fates -> most progress -> fate time left -> by distance
+                    added map flag for next fate
+                    added prioirity targeting for forlorns
                     added settings for:
                         - WaitIfBonusBuff
                         - MinTimeLeftToIgnoreFate
@@ -226,7 +228,7 @@ end
 ------------------------------Functions----------------------------------------------
 
 function TeleportToClosestAetheryteToFate(playerPosition, nextFate)
-    teleportTimePenalty = 200000 -- to account for how long teleport takes you
+    teleportTimePenalty = 300000 -- to account for how long teleport takes you
 
     local aetheryteForClosestFate = nil
     local closestTravelDistance = GetDistanceToPoint(nextFate.x, nextFate.y, nextFate.z)^2
@@ -269,7 +271,7 @@ end
 ]]
 function SelectNextFateHelper(tempFate, nextFate)
 
-    if tempFate.timeLeft < MinTimeLeftToIgnoreFate then
+    if tempFate.timeLeft < MinTimeLeftToIgnoreFate or tempFate.progress > CompletionToIgnoreFate then
         return nextFate
     else
         if nextFate == nil then
@@ -416,7 +418,7 @@ function SelectNextFate()
                 if JoinBossFatesIfActive and tempFate.progress >= CompletionToJoinBossFate then
                     nextFate = SelectNextFateHelper(tempFate, nextFate)
                 end
-            else -- else is normal fate
+            elseif tempFate.duration ~= 0 then -- else is normal fate. avoid unlisted talk to npc fates
                 nextFate = SelectNextFateHelper(tempFate, nextFate)
             end
             LogInfo("[FATE] Finished considering fate #"..tempFate.fateId.." "..tempFate.fateName)
@@ -465,12 +467,12 @@ function MoveToFate(nextFate)
     end
 
     if HasFlightUnlocked(SelectedZone.zoneId) then
-        LogInfo("/echo [FATE] Moving to "..nextFate.x..", "..nextFate.y..", "..nextFate.z)
+        LogInfo("[FATE] Moving to "..nextFate.x..", "..nextFate.y..", "..nextFate.z)
         yield("/vnavmesh stop")
         yield("/wait 1")
         PathfindAndMoveTo(nextFate.x, nextFate.y, nextFate.z, true)
     else
-        LogInfo("/echo [FATE] Moving to "..nextFate.x..", "..nextFate.y..", "..nextFate.z)
+        LogInfo("[FATE] Moving to "..nextFate.x..", "..nextFate.y..", "..nextFate.z)
         yield("/vnavmesh stop")
         yield("/wait 1")
         PathfindAndMoveTo(nextFate.x, nextFate.y, nextFate.z)
@@ -526,7 +528,7 @@ function InteractWithFateNpc(fate)
         LogInfo("[FATE] Exiting InteractWithFateNpc")
     end
     yield("/echo [FATE] Fate begun")
-    yield("/echo [FATE] Target before leaving InteractWithFateNpc: "..GetTargetName())
+    LogInfo("[FATE] Target before leaving InteractWithFateNpc: "..GetTargetName())
 end
 
 --Paths to the enemy (for Meele)
@@ -697,13 +699,141 @@ end
 
 ---------------------------Beginning of the Code------------------------------------
 
--- Read zone data from json
-local json = require("json")
-open = io.open
-local fatesdatafile = open(os.getenv("appdata") .. "\\XIVLauncher\\pluginConfigs\\SomethingNeedDoing\\fatesdata.json")
-local stringfatesdata = fatesdatafile:read "*a"
-fatesdatafile:close()
-local fatesdata = json.decode(stringfatesdata)
+local fatesdata = {
+    {
+        zoneName = "Urqopacha",
+        zoneId = 1187,
+        aetheryteList = {
+            { aetheryteName="Wachunpelo", x=335, y=-160, z=-415 },
+            { aetheryteName="Worlar's Echo", x=465, y=115, z=635 },
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+                "Young Volcanoes"
+            }
+        }
+    },
+    {
+        zoneName="Kozama'uka",
+        zoneId=1188,
+        aetheryteList={
+            { aetheryteName="Ok'hanu", x=-170, y=6, z=-470 },
+            { aetheryteName="Many Fires", x=465, y=115, z=635 },
+            { aetheryteName="Earthenshire", x=545, y=115, z=200 }
+        },
+        fatesList={
+            collectionsFates={
+                "Borne on the Backs of Burrowers"
+            },
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+                "Mole Patrol"
+            }
+        }
+    },
+    {
+        zoneName="Yak T'el",
+        zoneId=1189,
+        aetheryteList={
+            { aetheryteName="Iq Br'aax", x=-400, y=24, z=-431 },
+            { aetheryteName="Mamook", x=720, y=-132, z=527 }
+        },
+        fatesList= {
+            collectionsFates= {
+                "Escape Shroom",
+                "The Spawning"
+            },
+            otherNpcFates= {},
+            bossFates= {
+                "Moths are Tough"
+            },
+            blacklistedFates= {
+                "The Departed"
+            }
+        }
+    },
+    {
+        zoneName="Shaaloani",
+        zoneId=1190,
+        aetheryteList= {
+            { aetheryteName="Hhusatahwi", x=390, y=0, z=465 },
+            { aetheryteName="Sheshenewezi Springs", x=-295, y=19, z=-115 },
+            { aetheryteName="Mehwahhetsoan", x=310, y=-15, z=-567 }
+        },
+        fatesList= {
+            collectionsFates= {
+                "Gonna Have Me Some Fur",
+                "The Serpentlord Sires"
+            },
+            otherNpcFates= {},
+            bossFates= {
+                "The Serpentlord Seethes",
+                "Breaking the Jaw"
+            },
+            blacklistedFates= {}
+        }
+    },
+    {
+        zoneName="Heritage Found",
+        zoneId=1191,
+        aetheryteList= {
+            { aetheryteName="Yyasulani Station", x=515, y=145, z=210 },
+            { aetheryteName="The Outskirts", x=-221, y=32, z=-583 },
+            { aetheryteName="Electrope Strike", x=-222, y=31, z=123 }
+        },
+        fatesList= {
+            collectionsFates= {
+                "License to Dill",
+                "When It's So Salvage"
+            },
+            otherNpcFates= {
+                { fateName= "It's Super Defective", npcName= "Novice Hunter" },
+                { fateName= "Running of the Katobleps", npcName= "Novice Hunter" },
+                { fateName= "Ware the Wolves", npcName= "Imperiled Hunter" },
+                { fateName= "Domo Arigato", npcName= "Perplexed Reforger" },
+                { fateName= "Old Stampeding Grounds", npcName= "Driftdowns Reforger" },
+                { fateName= "Pulling the Wool", npcName= "Panicked Courier" }
+            },
+            bossFates= {
+                "A Scythe to an Axe Fight",
+                "(Got My Eye) Set on You"
+            },
+            blacklistedFates= {}
+        }
+    },
+    {
+        zoneName="Living Memory",
+        zoneId=1192,
+        aetheryteList= {
+            { aetheryteName="Leynode Mnemo", x=0, y=56, z=796 },
+            { aetheryteName="Leynode Pyro", x=659, y=27, z=-285 },
+            { aetheryteName="Leynode Aero", x=-253, y=56, z=-400 }
+        },
+        fatesList= {
+            collectionsFates= {
+                "Seeds of Tomorrow",
+                "Scattered Memories",
+                "Combing the Area"
+            },
+            otherNpcFates= {
+                { fateName= "Canal Carnage", npcName= "Unlost Sentry GX" },
+                { fateName= "Mascot March", npcName= "The Grand Marshal" }
+            },
+            bossFates= {
+                "Feed Me, Sentries",
+                "Slime to Die",
+                "Critical Corruption",
+                "Horse in the Round",
+                "Mascot Murder"
+            },
+            blacklistedFates= {}
+        }
+    }
+}
 
 for i, zone in ipairs(fatesdata) do
     if SelectedZoneName == zone.zoneName then
@@ -845,7 +975,13 @@ while true do
           (IsInFate() or (IsOtherNpcFate(CurrentFate.fateName) and CurrentFate.startTime == 0 and GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 20)) do
         yield("/echo Dismounting...")
         yield("/vnavmesh stop")
-        yield("/gaction dismount")
+        if GetCharacterCondition(CharacterCondition.flying) then
+            yield("/gaction dismount") -- first dismount call only lands the mount
+            while GetCharacterCondition(CharacterCondition.flying) do
+                yield("/wait 1")
+            end
+        end
+        yield("/gaction dismount") -- actually dismount
         yield("/wait 1")
         antistuck()
     end
@@ -854,7 +990,7 @@ while true do
     if IsOtherNpcFate(CurrentFate.fateName) and CurrentFate.startTime == 0 and
        GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 20
     then
-        yield("/echo Arrived 2 at NPC fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
+        yield("/echo Arrived at NPC fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
         InteractWithFateNpc(CurrentFate)
     end
 
