@@ -973,14 +973,15 @@ while true do
     --Dismounting upon arriving at fate
     while GetCharacterCondition(CharacterCondition.mounted) and
           (IsInFate() or (IsOtherNpcFate(CurrentFate.fateName) and CurrentFate.startTime == 0 and GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 20)) do
-        yield("/echo Dismounting...")
         yield("/vnavmesh stop")
         if GetCharacterCondition(CharacterCondition.flying) then
+            yield("/echo Landing...")
             yield("/gaction dismount") -- first dismount call only lands the mount
             while GetCharacterCondition(CharacterCondition.flying) do
                 yield("/wait 1")
             end
         end
+        yield("/echo Dismounting...")
         yield("/gaction dismount") -- actually dismount
         yield("/wait 1")
         antistuck()
