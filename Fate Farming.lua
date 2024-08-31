@@ -95,7 +95,7 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 --false = no
 
 --Teleport and Voucher
-SelectedZoneName = "Living Memory"  --Enter the name of the zone where you want to farm Fates
+SelectedZoneName = "Coerthas Central Highlands"  --Enter the name of the zone where you want to farm Fates
 EnableChangeInstance = true      --should it Change Instance when there is no Fate (only works on DT fates)
 Exchange = false           --should it Exchange Vouchers
 OldV = false               --should it Exchange Old Vouchers
@@ -157,6 +157,130 @@ CharacterCondition = {
 
 
 FatesData = {
+    {
+        zoneName = "Coerthas Central Highlands",
+        zoneId = 155,
+        aetheryteList = {
+            { aetheryteName="Camp Dragonhead", x=223.98718, y=315.7854, z=-234.85168 }
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    },
+    {
+        zoneName = "Coerthas Western Highlands",
+        zoneId = 397,
+        aetheryteList = {
+            { aetheryteName="Falcon's Nest", x=474.87585, y=217.94458, z=708.5221 }
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    },
+    {
+        zoneName = "Mor Dhona",
+        zoneId = 156,
+        aetheryteList = {
+            { aetheryteName="Revenant's Toll", x=40.024292, y=24.002441, z=-668.0247 }
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    },
+    {
+        zoneName = "The Sea of Clouds",
+        zoneId = 401,
+        aetheryteList = {
+            { aetheryteName="Camp Cloudtop", x=-615.7473, y=-118.36426, z=546.5934 },
+            { aetheryteName="Ok' Zundu", x=-613.1533, y=-49.485046, z=-415.03015 }
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    },
+    {
+        zoneName = "Azys Lla",
+        zoneId = 398,
+        aetheryteList = {
+            { aetheryteName="Helix", x=-722.8046, y=-182.29956, z=-593.40814 }
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    },
+    {
+        zoneName = "The Dravanian Forelands",
+        zoneId = 402,
+        aetheryteList = {
+            { aetheryteName="Tailfeather", x=532.6771, y=-48.722107, z=30.166992 },
+            { aetheryteName="Anyx Trine", x=-304.12756, y=-16.70868, z=32.059082 }
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    },
+    {
+        zoneName = "The Dravanian Hinterlands",
+        zoneId=399,
+        tpZoneId = 478,
+        aetheryteList = {
+            { aetheryteName="Idyllshire", x=71.94617, y=211.26111, z=-18.905945 }
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    },
+    {
+        zoneName = "The Churning Mists",
+        zoneId=399,
+        tpZoneId = 400,
+        aetheryteList = {
+            { aetheryteName="Moghome", x=259.20496, y=-37.70508, z=596.85657 },
+            { aetheryteName="Zenith", x=-584.9546, y=52.84192, z=313.43542 },
+        },
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    },
     {
         zoneName = "Urqopacha",
         zoneId = 1187,
