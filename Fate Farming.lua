@@ -197,13 +197,6 @@ FatesData = {
             bossFates= {},
             blacklistedFates= {
             }
-        },
-        fatesList= {
-            collectionsFates= {},
-            otherNpcFates= {},
-            bossFates= {},
-            blacklistedFates= {
-            }
         }
     },
     {
