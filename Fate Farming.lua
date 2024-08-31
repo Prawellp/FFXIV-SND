@@ -505,9 +505,9 @@ function TeleportToClosestAetheryteToFate(playerPosition, nextFate)
 end
 
 function TeleportTo(aetheryteName)
-    while not IsPlayerAvailable() do
-        LogInfo("[FATE] Waiting for player to be available to teleport.")
-        yield("/wait 1")
+    while EorzeaTimeToUnixTime(GetCurrentEorzeaTimestamp()) - LastTeleportTimeStamp < 5 do
+        LogInfo("[FATE] Too soon since last teleport. Waiting...")
+        yield("/wait 5")
     end
 
     yield("/tp "..aetheryteName)
@@ -521,6 +521,7 @@ function TeleportTo(aetheryteName)
         LogInfo("[FATE] Teleporting...")
         yield("/wait 1")
     end
+    LastTeleportTimeStamp = EorzeaTimeToUnixTime(GetCurrentEorzeaTimestamp())
 end
 
 function EorzeaTimeToUnixTime(eorzeaTime)
@@ -974,15 +975,6 @@ end
 
 ---------------------------Beginning of the Code------------------------------------
 
-for i, zone in ipairs(FatesData) do
-    if SelectedZoneName == zone.zoneName then
-        SelectedZone = zone
-    end
-end
-if SelectedZone == nil then
-    yield("/echo [FATE] Could not find zone by the name of "..SelectedZoneName)
-end
-
 --vnavmesh building
 if not NavIsReady() then
     yield("/echo [FATE] Building Mesh Please wait...")
@@ -1003,6 +995,17 @@ GemAnnouncementCount = 0
 cCount = 0
 AvailableFateCount = 0
 FoodCheck = 0
+
+for i, zone in ipairs(FatesData) do
+    if SelectedZoneName == zone.zoneName then
+        SelectedZone = zone
+    end
+end
+if SelectedZone == nil then
+    yield("/echo [FATE] Could not find zone by the name of "..SelectedZoneName)
+end
+
+LastTeleportTimeStamp = 0
 
 --Start of the Loop
 
@@ -1285,8 +1288,7 @@ while true do
         LogInfo("[FATE] Handling retainers...")
         if ARRetainersWaitingToBeProcessed() == true then
             while not IsInZone(129) do
-                yield("/tp limsa")
-                yield("/wait 7")
+                TeleportTo("Limsa Lominsa Lower Decks")
             end
             while IsPlayerAvailable() == false and NavIsReady() == false do
                 yield("/wait 1")
@@ -1354,14 +1356,6 @@ while true do
                     yield("/wait 1")
                 end
             end
-
-            yield("/tp "..teleport)
-            yield("/wait 7")
-
-            while GetCharacterCondition(CharacterCondition.transition) do
-                yield("/wait 1")
-            end
-            yield("/wait 1")
         end
     end
 
@@ -1370,7 +1364,7 @@ while true do
     --old Vouchers!
     if gems > 1400 and Exchange == true and OldV == true then
         LogInfo("[FATE] Exchanging for old vouchers.")
-        yield("/tp Old Sharlayan")
+        TeleportTo("Old Sharlayan")
         yield("/wait 7")
         while GetCharacterCondition(CharacterCondition.transition) == true do
             yield("/wait 0.5")
@@ -1394,11 +1388,6 @@ while true do
                 yield("/wait 1")
                 yield("/callback ShopExchangeCurrency true -1")
                 yield("/wait 1")
-                yield("/tp "..teleport)
-                yield("/wait 7")
-                while GetCharacterCondition(CharacterCondition.transition) do
-                    yield("/wait 1")
-                end
             end
         end
     end
@@ -1407,7 +1396,7 @@ while true do
     if gems > 1400 and Exchange == true and OldV == false then
         LogInfo("[FATE] Exchanging for new vouchers.")
         while not IsInZone(1186) do
-            yield("/tp Solution Nine")
+            TeleportTo("Solution Nine")
             yield("/wait 7")
                 
             while GetCharacterCondition(CharacterCondition.transition) == true do
