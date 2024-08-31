@@ -508,10 +508,12 @@ function TeleportTo(aetheryteName)
     yield("/tp "..aetheryteName)
     yield("/wait 1") -- wait for casting to begin
     while GetCharacterCondition(CharacterCondition.casting) do
+        LogInfo("[FATE] Casting teleport...")
         yield("/wait 1")
     end
     yield("/wait 1") -- wait for that microsecond in between the cast finishing and the transition beginning
     while GetCharacterCondition(CharacterCondition.transition) do
+        LogInfo("[FATE] Teleporting...")
         yield("/wait 1")
     end
 end
@@ -524,7 +526,6 @@ end
     Given two fates, picks the better one based on priority progress -> is bonus -> time left -> distance
 ]]
 function SelectNextFateHelper(tempFate, nextFate)
-
     if tempFate.timeLeft < MinTimeLeftToIgnoreFate or tempFate.progress > CompletionToIgnoreFate then
         return nextFate
     else
@@ -694,6 +695,7 @@ end
 
 --Paths to the Fate
 function MoveToFate(nextFate)
+    LogInfo("[FATE] Moving to fate #"..nextFate.fateId.." "..nextFate.fateName)
     yield("/echo [FATE] Moving to fate #"..nextFate.fateId.." "..nextFate.fateName)
     if HasPlugin("ChatCoordinates") then
         SetMapFlag(SelectedZone.zoneId, nextFate.x, nextFate.y, nextFate.z)
@@ -813,6 +815,7 @@ function ChangeInstance()
         yield("/wait 1")
 
         while not HasTarget() or GetTargetName() ~= "aetheryte" do
+            LogInfo("[FATE] Attempting to target aetheryte.")
             local closestAetheryte = nil
             local closestAetheryteDistance = math.maxinteger
             for i, aetheryte in ipairs(SelectedZone.aetheryteList) do
@@ -830,6 +833,7 @@ function ChangeInstance()
         end
 
         while GetCharacterCondition(CharacterCondition.mounted) do
+            LogInfo("[FATE] Dismounting...")
             yield("/gaction dismount")
             yield("/wait 1")
         end
@@ -837,6 +841,7 @@ function ChangeInstance()
         yield("/lockon")
         yield("/automove")
         while GetDistanceToTarget() > 10 do
+            LogInfo("[FATE] Approaching aetheryte...")
             yield("/wait 0.5")
         end
         yield("/automove off")
@@ -845,6 +850,7 @@ function ChangeInstance()
         yield("/wait 1") -- wait for instance transfer to register
         CurrentInstance = (CurrentInstance + 1) % 3
         while GetCharacterCondition(CharacterCondition.transition) do -- wait for instance transfer to complete
+            LogInfo("[FATE] Waiting for instance transfer to complete...")
             yield("/wait 1")
         end
         CurrentFate = SelectNextFate()
@@ -958,11 +964,6 @@ end
 if SelectedZone == nil then
     yield("/echo [FATE] Could not find zone by the name of "..SelectedZoneName)
 end
-while not IsInZone(SelectedZone.zoneId) do
-    local teleport = SelectedZone.aetheryteList[1].aetheryteName
-    yield("/echo [FATE] Teleporting to "..teleport.." and beginning FATE farm.")
-    TeleportTo(teleport)
-end
 
 --vnavmesh building
 if not NavIsReady() then
@@ -987,7 +988,16 @@ FoodCheck = 0
 
 --Start of the Loop
 
+LogInfo("[FATE] Starting fate farming script.")
+
 while true do
+    LogInfo("[FATE] Starting new iteration.")
+    while not IsInZone(SelectedZone.zoneId) do
+        local teleport = SelectedZone.aetheryteList[1].aetheryteName
+        yield("/echo [FATE] Teleporting to "..teleport.." and resuming FATE farm.")
+        TeleportTo(teleport)
+    end
+
     gems = GetItemCount(26807)
 
     --food usage
@@ -1020,6 +1030,7 @@ while true do
 
     while not IsPlayerAvailable() do
         -- wait for player to be avialable
+        LogInfo("[FATE] Waiting for player to be available.")
         yield("/wait 1")
     end
 
@@ -1028,6 +1039,7 @@ while true do
     -- if has twist of fate buff, stay in current instance and search for more fates
     -- while loop allows you to click off the buff
     while CurrentFate == nil and WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289)) do
+        LogInfo("[FATE] Staying in instance due to Twist of Fate buff.")
         yield("/echo [FATE] Staying in instance due to Twist of Fate bonus buff.")
         yield("/wait 30")
         CurrentFate = SelectNextFate()
@@ -1083,11 +1095,13 @@ while true do
             end
         end
     end
-    yield("/echo [FATE] Arrived at fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
 
     --Dismounting upon arriving at fate
     while GetCharacterCondition(CharacterCondition.mounted) and
-          (IsInFate() or (IsOtherNpcFate(CurrentFate.fateName) and CurrentFate.startTime == 0 and GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 20)) do
+          (IsInFate() or (IsOtherNpcFate(CurrentFate.fateName) and CurrentFate.startTime == 0 and GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 20))
+    do
+        yield("/echo [FATE] Arrived at fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
+        LogInfo("[FATE] Arrived at Fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
         yield("/vnavmesh stop")
         if GetCharacterCondition(CharacterCondition.flying) then
             yield("/echo Landing...")
@@ -1106,7 +1120,6 @@ while true do
     if IsOtherNpcFate(CurrentFate.fateName) and CurrentFate.startTime == 0 and
        GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 20
     then
-        yield("/echo Arrived at NPC fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
         InteractWithFateNpc(CurrentFate)
     end
 
@@ -1179,6 +1192,7 @@ while true do
     if RepairAmount > 0 and not GetCharacterCondition(CharacterCondition.mounted) then
         if NeedsRepair(RepairAmount) then
             while not IsAddonVisible("Repair") do
+                LogInfo("[FATE] Opening repair menu...")
                 yield("/generalaction repair")
                 yield("/wait 0.5")
             end
@@ -1188,7 +1202,8 @@ while true do
                 yield("/callback SelectYesno true 0")
                 yield("/wait 0.1")
             end
-            while GetCharacterCondition(39) do 
+            while GetCharacterCondition(CharacterCondition.occupied39) do
+                LogInfo("[FATE] Repairing...")
                 yield("/wait 1") 
             end
             yield("/wait 1")
@@ -1201,7 +1216,8 @@ while true do
         if CanExtractMateria(100) then
             yield("/generalaction \"Materia Extraction\"")
             yield("/waitaddon Materialize")
-            while CanExtractMateria(100) == true do
+            while CanExtractMateria(100) == true and GetInventoryFreeSlotCount() > 1 do
+                LogInfo("[FATE] Extracting materia...")
                 if not IsAddonVisible("Materialize") then
                     yield("/generalaction \"Materia Extraction\"")
                 end
@@ -1225,7 +1241,8 @@ while true do
     if CanExtractMateria(100) and Extract and not GetCharacterCondition(CharacterCondition.casting) then
         yield("/generalaction \"Materia Extraction\"")
         yield("/waitaddon Materialize")
-        while CanExtractMateria(100) == true and not GetCharacterCondition(CharacterCondition.casting) do
+        while CanExtractMateria(100) == true and not GetCharacterCondition(CharacterCondition.casting) and GetInventoryFreeSlotCount() > 1 do
+            LogInfo("[FATE] Extracting materia 2...")
             if not IsAddonVisible("Materialize") then
                 yield("/generalaction \"Materia Extraction\"")
             end
@@ -1246,7 +1263,8 @@ while true do
     end
 
     --Retainer Process
-    if Retainers and GetCharacterCondition(CharacterCondition.inCombat) == false then 
+    if Retainers and not GetCharacterCondition(CharacterCondition.inCombat) then 
+        LogInfo("[FATE] Handling retainers...")
         if ARRetainersWaitingToBeProcessed() == true then
             while not IsInZone(129) do
                 yield("/tp limsa")
@@ -1330,9 +1348,10 @@ while true do
     end
 
 
-------------------------------Vouchers-----------------------------------------------
---old Vouchers!
+    ------------------------------Vouchers-----------------------------------------------
+    --old Vouchers!
     if gems > 1400 and Exchange == true and OldV == true then
+        LogInfo("[FATE] Exchanging for old vouchers.")
         yield("/tp Old Sharlayan")
         yield("/wait 7")
         while GetCharacterCondition(CharacterCondition.transition) == true do
@@ -1368,6 +1387,7 @@ while true do
 
     --new Vouchers!
     if gems > 1400 and Exchange == true and OldV == false then
+        LogInfo("[FATE] Exchanging for new vouchers.")
         while not IsInZone(1186) do
             yield("/tp Solution Nine")
             yield("/wait 7")
@@ -1431,12 +1451,6 @@ while true do
                     end
                 end
             end
-        end
-
-        while not IsInZone(SelectedZone.zoneId) do
-            local teleport = SelectedZone.aetheryteList[1].aetheryteName
-            yield("/echo [FATE] Teleporting to "..teleport.." and resuming FATE farm.")
-            TeleportTo(teleport)
         end
     end
 end
