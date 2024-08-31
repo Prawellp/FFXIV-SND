@@ -505,6 +505,11 @@ function TeleportToClosestAetheryteToFate(playerPosition, nextFate)
 end
 
 function TeleportTo(aetheryteName)
+    while not IsPlayerAvailable() do
+        LogInfo("[FATE] Waiting for player to be available to teleport.")
+        yield("/wait 1")
+    end
+
     yield("/tp "..aetheryteName)
     yield("/wait 1") -- wait for casting to begin
     while GetCharacterCondition(CharacterCondition.casting) do
