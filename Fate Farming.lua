@@ -439,6 +439,8 @@ end
 --Fate settings
 if UsePandoraSync then
     PandoraSetFeatureState("Auto-Sync FATEs", true)
+else
+    PandoraSetFeatureState("Auto-Sync FATEs", false)
 end
 PandoraSetFeatureState("FATE Targeting Mode", true)
 PandoraSetFeatureState("Action Combat Targeting", false)
