@@ -1470,11 +1470,6 @@ while true do
                     yield("/wait 0.5")
                     yield("/callback ShopExchangeCurrency true -1")
                     yield("/wait 1")
-                    yield("/tp "..teleport)
-                    yield("/wait 7")
-                    while GetCharacterCondition(CharacterCondition.transition) do
-                        yield("/wait 1")
-                    end
                 end
             end
         end
