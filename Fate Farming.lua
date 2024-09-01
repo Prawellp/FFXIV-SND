@@ -782,6 +782,7 @@ function InteractWithFateNpc(fate)
         while not IsInFate() and GetCharacterCondition(CharacterCondition.inCombat) do
             TurnOnRSR()
             yield("/battletarget")
+            yield("/wait 1")
         end
 
         while not HasTarget() and IsFateActive(fate.fateId) and not IsInFate() do -- break conditions in case someone snipes the interact before you
