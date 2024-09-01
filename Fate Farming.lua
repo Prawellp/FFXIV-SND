@@ -8,9 +8,9 @@
 
   ***********
   * Version *
-  *  1.0.1  *
+  *  1.0.5  *
   ***********
-    -> 1.0.4    Bugfixes
+    -> 1.0.5    Added partial support for other areas
     -> 1.0.0    Code changes
                     added pathing priority to prefer bonus fates -> most progress -> fate time left -> by distance
                     added map flag for next fate
@@ -98,7 +98,6 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 --false = no
 
 --Teleport and Voucher
-SelectedZoneName = "Urqopacha"  --Enter the name of the zone where you want to farm Fates
 EnableChangeInstance = true      --should it Change Instance when there is no Fate (only works on DT fates)
 Exchange = false           --should it Exchange Vouchers
 OldV = false               --should it Exchange Old Vouchers
@@ -1018,13 +1017,26 @@ cCount = 0
 AvailableFateCount = 0
 FoodCheck = 0
 
+local selectedZoneId = GetZoneID()
 for i, zone in ipairs(FatesData) do
-    if SelectedZoneName == zone.zoneName then
+    if selectedZoneId == zone.zoneId then
         SelectedZone = zone
     end
 end
 if SelectedZone == nil then
-    yield("/echo [FATE] Could not find zone by the name of "..SelectedZoneName)
+    yield("/echo [FATE] Current zone is only partially supported. Will not teleport back on death or leaving.")
+    SelectedZone = {
+        zoneName = "Unknown Zone Name",
+        zoneId = selectedZoneId,
+        aetheryteList = {},
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    }
 end
 
 LastTeleportTimeStamp = 0
