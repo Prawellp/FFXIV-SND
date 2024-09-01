@@ -263,8 +263,7 @@ FatesData = {
     },
     {
         zoneName = "The Churning Mists",
-        zoneId=399,
-        tpZoneId = 400,
+        zoneId=400,
         aetheryteList = {
             { aetheryteName="Moghome", x=259.20496, y=-37.70508, z=596.85657 },
             { aetheryteName="Zenith", x=-584.9546, y=52.84192, z=313.43542 },
