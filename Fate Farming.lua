@@ -927,6 +927,7 @@ function TurnOnRSR()
     else
         yield("/rotation settings aoetype 1") -- cleave
     end
+    yield("/wait 1")
 end
 
 function antistuck()
