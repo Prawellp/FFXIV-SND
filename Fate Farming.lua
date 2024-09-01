@@ -8,8 +8,9 @@
 
   ***********
   * Version *
-  *  1.0.0  *
+  *  1.0.1  *
   ***********
+    -> 1.0.1    Bugfixes
     -> 1.0.0    Code changes
                     added pathing priority to prefer bonus fates -> most progress -> fate time left -> by distance
                     added map flag for next fate
@@ -69,6 +70,7 @@ Plugins that are needed for it to work:
     -> RotationSolver Reborn :  (for Attacking enemys)  https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json       
         -> Target -> activate "Select only Fate targets in Fate" and "Target Fate priority"
         -> Target -> "Engage settings" set to "Previously engaged targets (enagegd on countdown timer)"
+    -> TextAdvance : (for talking to the NPCs) https://github.com/NightmareXIV/MyDalamudPlugins/raw/main/pluginmaster.json
 
 *********************
 *  Optional Plugins *
@@ -82,6 +84,7 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
     -> Deliveroo : (for gc turn ins [TurnIn])   https://plugins.carvel.li/
     -> Bossmod Reborn : (for AI dodging [BMR])  https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json
         -> make sure to set the Max distance in the AI Settings to the desired distance (25 is to far for Meeles)
+    -> ChatCoordinates : (for setting a flag on the next Fate) available via base /xlplugins
 
 ]]
 --[[
@@ -95,7 +98,7 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 --false = no
 
 --Teleport and Voucher
-SelectedZoneName = "Coerthas Central Highlands"  --Enter the name of the zone where you want to farm Fates
+SelectedZoneName = "Heritage Found"  --Enter the name of the zone where you want to farm Fates
 EnableChangeInstance = true      --should it Change Instance when there is no Fate (only works on DT fates)
 Exchange = false           --should it Exchange Vouchers
 OldV = false               --should it Exchange Old Vouchers
@@ -103,7 +106,7 @@ OldV = false               --should it Exchange Old Vouchers
 --Fate settings
 WaitIfBonusBuff = true          --Don't change instances if you have the Twist of Fate bonus buff
 CompletionToIgnoreFate = 80     --Percent above which to ignore fate
-MinTimeLeftToIgnoreFate = 5*60  --Seconds below which to ignore fate
+MinTimeLeftToIgnoreFate = 15*60  --Seconds below which to ignore fate
 JoinBossFatesIfActive = true    --Join boss fates if someone is already working on it (to avoid soloing long boss fates). If false, avoid boss fates entirely.
 CompletionToJoinBossFate = 20   --Percent above which to join boss fate
 fatewait = 0                    --the amount how long it should when before dismounting (0 = at the beginning of the fate 3-5 = should be in the middle of the fate)
@@ -283,7 +286,16 @@ FatesData = {
         },
         fatesList= {
             collectionsFates= {},
-            otherNpcFates= {},
+            otherNpcFates= {
+                { fateName= "Pasture Expiration Date", npcName= "Tsivli Stoutstrider" },
+                { fateName= "Gust Stop Already", npcName= "Mourning Yok Huy" },
+                { fateName= "Lay Off the Horns", npcName= "Yok Huy Vigilkeeper" },
+                { fateName= "Birds Up", npcName= "Coffee Farmer" },
+                { fateName= "Salty Showdown", npcName= "Chirwagur Sabreur" },
+                { fateName= "Fire Suprression", npcName= "Tsivli Stoutstrider" },
+                { fateName= "Panaq Attack", npcName= "Pelupelu Peddler" },
+                { fateName= "Wolf Parade", npcName= "Pelupelu Peddler" },
+            },
             bossFates= {},
             blacklistedFates= {
                 "Young Volcanoes"
@@ -341,12 +353,15 @@ FatesData = {
         fatesList= {
             collectionsFates= {
                 "Gonna Have Me Some Fur",
-                "The Serpentlord Sires"
+                "The Serpentlord Sires" -- Br'uk Vaw of the Setting Sun
             },
-            otherNpcFates= {},
+            otherNpcFates= {
+            },
             bossFates= {
                 "The Serpentlord Seethes",
-                "Breaking the Jaw"
+                "Breaking the Jaw",
+                "Helms off to the Bull", -- boss NPC fate, Hhetsarro Herder
+                "The Dead Never Die", -- boss NPC fate, Tonawawtan Worker
             },
             blacklistedFates= {}
         }
@@ -524,6 +539,13 @@ function TeleportTo(aetheryteName)
     LastTeleportTimeStamp = EorzeaTimeToUnixTime(GetCurrentEorzeaTimestamp())
 end
 
+function HandleUnexpectedCombat()
+    while GetCharacterCondition(CharacterCondition.inCombat) do
+        yield("battletarget")
+        TurnOnRSR()
+    end
+end
+
 function EorzeaTimeToUnixTime(eorzeaTime)
     return eorzeaTime/(144/7) -- 24h Eorzea Time equals 70min IRL
 end
@@ -538,11 +560,11 @@ function SelectNextFateHelper(tempFate, nextFate)
         if nextFate == nil then
                 LogInfo("[FATE] Selecting #"..tempFate.fateId.." because no other options so far.")
                 return tempFate
-        elseif nextFate.startTime == 0 and tempFate.startTime > 0 then -- nextFate is an unopened npc fate
-            LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." is an unopened npc fate.")
-            return tempFate
-        elseif tempFate.startTime == 0 and nextFate.startTime > 0 then -- tempFate is an unopened npc fate
-            return nextFate
+        -- elseif nextFate.startTime == 0 and tempFate.startTime > 0 then -- nextFate is an unopened npc fate
+        --     LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." is an unopened npc fate.")
+        --     return tempFate
+        -- elseif tempFate.startTime == 0 and nextFate.startTime > 0 then -- tempFate is an unopened npc fate
+        --     return nextFate
         else -- select based on progress
             if tempFate.progress > nextFate.progress then
                 LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." has less progress.")
@@ -744,8 +766,8 @@ end
 
 function IsFateActive(fateId)
     local activeFates = GetActiveFates()
-    for activeFateId in activeFates do
-        if fateId == activeFateId then
+    for i = 0, activeFates.Count-1 do
+        if fateId == activeFates[i] then
             return true
         end
     end
@@ -893,17 +915,13 @@ function AvoidEnemiesWhileFlying()
 end
 
 function TurnOnRSR()
+    yield("/rotation manual")
     Class = GetClassJobId()
     
-    if Class == 21 or Class == 37 or Class == 19 or Class == 32 then -- tank classes
-        yield("/rotation auto")
-        yield("/rotation settings aoetype 1")
-    elseif Class == 24 then -- white mage holy OP
-        yield("/rotation manual")
-        yield("/rotation settings aoetype 2")
+    if Class == 21 or Class == 37 or Class == 19 or Class == 32 or Class == 24 then -- white mage holy OP, or tank classes
+        yield("/rotation settings aoetype 2") -- aoe
     else
-        yield("/rotation manual")
-        yield("/rotation settings aoetype 3")
+        yield("/rotation settings aoetype 1") -- cleave
     end
 end
 
@@ -1127,14 +1145,15 @@ while true do
         if GetCharacterCondition(CharacterCondition.flying) then
             yield("/echo Landing...")
             yield("/gaction dismount") -- first dismount call only lands the mount
+            yield("/wait 3")
             while GetCharacterCondition(CharacterCondition.flying) do
-                yield("/wait 1")
+                antistuck()
             end
         end
         yield("/echo Dismounting...")
         yield("/gaction dismount") -- actually dismount
         yield("/wait 1")
-        antistuck()
+        -- antistuck()
     end
 
     -- need to talk to npc to start fate
