@@ -8,8 +8,9 @@
 
   ***********
   * Version *
-  *  1.0.0  *
+  *  1.0.7  *
   ***********
+    -> 1.0.7    Added partial support for other areas
     -> 1.0.0    Code changes
                     added pathing priority to prefer bonus fates -> most progress -> fate time left -> by distance
                     added map flag for next fate
@@ -69,6 +70,7 @@ Plugins that are needed for it to work:
     -> RotationSolver Reborn :  (for Attacking enemys)  https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json       
         -> Target -> activate "Select only Fate targets in Fate" and "Target Fate priority"
         -> Target -> "Engage settings" set to "Previously engaged targets (enagegd on countdown timer)"
+    -> TextAdvance : (for talking to the NPCs) https://github.com/NightmareXIV/MyDalamudPlugins/raw/main/pluginmaster.json
 
 *********************
 *  Optional Plugins *
@@ -82,6 +84,7 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
     -> Deliveroo : (for gc turn ins [TurnIn])   https://plugins.carvel.li/
     -> Bossmod Reborn : (for AI dodging [BMR])  https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json
         -> make sure to set the Max distance in the AI Settings to the desired distance (25 is to far for Meeles)
+    -> ChatCoordinates : (for setting a flag on the next Fate) available via base /xlplugins
 
 ]]
 --[[
@@ -95,7 +98,6 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 --false = no
 
 --Teleport and Voucher
-SelectedZoneName = "Coerthas Central Highlands"  --Enter the name of the zone where you want to farm Fates
 EnableChangeInstance = true      --should it Change Instance when there is no Fate (only works on DT fates)
 Exchange = false           --should it Exchange Vouchers
 OldV = false               --should it Exchange Old Vouchers
@@ -103,7 +105,7 @@ OldV = false               --should it Exchange Old Vouchers
 --Fate settings
 WaitIfBonusBuff = true          --Don't change instances if you have the Twist of Fate bonus buff
 CompletionToIgnoreFate = 80     --Percent above which to ignore fate
-MinTimeLeftToIgnoreFate = 5*60  --Seconds below which to ignore fate
+MinTimeLeftToIgnoreFate = 3*60  --Seconds below which to ignore fate
 JoinBossFatesIfActive = true    --Join boss fates if someone is already working on it (to avoid soloing long boss fates). If false, avoid boss fates entirely.
 CompletionToJoinBossFate = 20   --Percent above which to join boss fate
 fatewait = 0                    --the amount how long it should when before dismounting (0 = at the beginning of the fate 3-5 = should be in the middle of the fate)
@@ -124,6 +126,8 @@ slots = 5                  --how much inventory space before turning in
 --Other stuff
 ChocoboS = true            --should it Activate the Chocobo settings in Pandora (to summon it)
 Announce = 2
+
+UsePandoraSync = true
 --Change this value for how much echos u want in chat 
 --2 is the fate your Moving to and Bicolor gems amount
 --1 is only Bicolor gems
@@ -260,8 +264,7 @@ FatesData = {
     },
     {
         zoneName = "The Churning Mists",
-        zoneId=399,
-        tpZoneId = 400,
+        zoneId=400,
         aetheryteList = {
             { aetheryteName="Moghome", x=259.20496, y=-37.70508, z=596.85657 },
             { aetheryteName="Zenith", x=-584.9546, y=52.84192, z=313.43542 },
@@ -283,8 +286,18 @@ FatesData = {
         },
         fatesList= {
             collectionsFates= {},
-            otherNpcFates= {},
-            bossFates= {},
+            otherNpcFates= {
+                { fateName= "Pasture Expiration Date", npcName= "Tsivli Stoutstrider" },
+                { fateName= "Gust Stop Already", npcName= "Mourning Yok Huy" },
+                { fateName= "Lay Off the Horns", npcName= "Yok Huy Vigilkeeper" },
+                { fateName= "Birds Up", npcName= "Coffee Farmer" },
+                { fateName= "Salty Showdown", npcName= "Chirwagur Sabreur" },
+                { fateName= "Fire Suppression", npcName= "Tsivli Stoutstrider" },
+                { fateName= "Wolf Parade", npcName= "Pelupelu Peddler" },
+            },
+            bossFates= {
+                "Panaq Attack"
+            },
             blacklistedFates= {
                 "Young Volcanoes"
             }
@@ -303,7 +316,9 @@ FatesData = {
                 "Borne on the Backs of Burrowers"
             },
             otherNpcFates= {},
-            bossFates= {},
+            bossFates= {
+                "Sayona Your Prayers"
+            },
             blacklistedFates= {
                 "Mole Patrol"
             }
@@ -341,12 +356,15 @@ FatesData = {
         fatesList= {
             collectionsFates= {
                 "Gonna Have Me Some Fur",
-                "The Serpentlord Sires"
+                "The Serpentlord Sires" -- Br'uk Vaw of the Setting Sun
             },
-            otherNpcFates= {},
+            otherNpcFates= {
+            },
             bossFates= {
                 "The Serpentlord Seethes",
-                "Breaking the Jaw"
+                "Breaking the Jaw",
+                "Helms off to the Bull", -- boss NPC fate, Hhetsarro Herder
+                "The Dead Never Die", -- boss NPC fate, Tonawawtan Worker
             },
             blacklistedFates= {}
         }
@@ -419,7 +437,11 @@ elseif ChocoboS == false then
 end
 
 --Fate settings
-PandoraSetFeatureState("Auto-Sync FATEs", true)
+if UsePandoraSync then
+    PandoraSetFeatureState("Auto-Sync FATEs", true)
+else
+    PandoraSetFeatureState("Auto-Sync FATEs", false)
+end
 PandoraSetFeatureState("FATE Targeting Mode", true)
 PandoraSetFeatureState("Action Combat Targeting", false)
 yield("/wait 0.5")
@@ -524,6 +546,16 @@ function TeleportTo(aetheryteName)
     LastTeleportTimeStamp = EorzeaTimeToUnixTime(GetCurrentEorzeaTimestamp())
 end
 
+function HandleUnexpectedCombat()
+    TurnOnRSR()
+    while GetCharacterCondition(CharacterCondition.inCombat)do
+        if not HasTarget() or GetTargetHP() <= 0 then
+            yield("/battletarget")
+        end
+        yield("/wait 1")
+    end
+end
+
 function EorzeaTimeToUnixTime(eorzeaTime)
     return eorzeaTime/(144/7) -- 24h Eorzea Time equals 70min IRL
 end
@@ -538,11 +570,11 @@ function SelectNextFateHelper(tempFate, nextFate)
         if nextFate == nil then
                 LogInfo("[FATE] Selecting #"..tempFate.fateId.." because no other options so far.")
                 return tempFate
-        elseif nextFate.startTime == 0 and tempFate.startTime > 0 then -- nextFate is an unopened npc fate
-            LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." is an unopened npc fate.")
-            return tempFate
-        elseif tempFate.startTime == 0 and nextFate.startTime > 0 then -- tempFate is an unopened npc fate
-            return nextFate
+        -- elseif nextFate.startTime == 0 and tempFate.startTime > 0 then -- nextFate is an unopened npc fate
+        --     LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." is an unopened npc fate.")
+        --     return tempFate
+        -- elseif tempFate.startTime == 0 and nextFate.startTime > 0 then -- tempFate is an unopened npc fate
+        --     return nextFate
         else -- select based on progress
             if tempFate.progress > nextFate.progress then
                 LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." has less progress.")
@@ -744,8 +776,8 @@ end
 
 function IsFateActive(fateId)
     local activeFates = GetActiveFates()
-    for activeFateId in activeFates do
-        if fateId == activeFateId then
+    for i = 0, activeFates.Count-1 do
+        if fateId == activeFates[i] then
             return true
         end
     end
@@ -757,8 +789,7 @@ function InteractWithFateNpc(fate)
         yield("/wait 1")
 
         while not IsInFate() and GetCharacterCondition(CharacterCondition.inCombat) do
-            TurnOnRSR()
-            yield("/battletarget")
+            HandleUnexpectedCombat()
         end
 
         while not HasTarget() and IsFateActive(fate.fateId) and not IsInFate() do -- break conditions in case someone snipes the interact before you
@@ -800,6 +831,8 @@ function InteractWithFateNpc(fate)
             yield("/wait 1")
         end
     end
+    yield("/wait 1")
+    yield("/lsync") -- there's a milisecond between when the fate starts and the lsync command becomes available, so Pandora's lsync won't trigger
     yield("/echo [FATE] Fate begun")
     LogInfo("[FATE] Exiting InteractWithFateNpc")
 end
@@ -893,18 +926,15 @@ function AvoidEnemiesWhileFlying()
 end
 
 function TurnOnRSR()
+    yield("/rotation manual")
     Class = GetClassJobId()
     
-    if Class == 21 or Class == 37 or Class == 19 or Class == 32 then -- tank classes
-        yield("/rotation auto")
-        yield("/rotation settings aoetype 1")
-    elseif Class == 24 then -- white mage holy OP
-        yield("/rotation manual")
-        yield("/rotation settings aoetype 2")
+    if Class == 21 or Class == 37 or Class == 19 or Class == 32 or Class == 24 then -- white mage holy OP, or tank classes
+        yield("/rotation settings aoetype 2") -- aoe
     else
-        yield("/rotation manual")
-        yield("/rotation settings aoetype 3")
+        yield("/rotation settings aoetype 1") -- cleave
     end
+    yield("/wait 1")
 end
 
 function antistuck()
@@ -996,13 +1026,26 @@ cCount = 0
 AvailableFateCount = 0
 FoodCheck = 0
 
+local selectedZoneId = GetZoneID()
 for i, zone in ipairs(FatesData) do
-    if SelectedZoneName == zone.zoneName then
+    if selectedZoneId == zone.zoneId then
         SelectedZone = zone
     end
 end
 if SelectedZone == nil then
-    yield("/echo [FATE] Could not find zone by the name of "..SelectedZoneName)
+    yield("/echo [FATE] Current zone is only partially supported. Will not teleport back on death or leaving.")
+    SelectedZone = {
+        zoneName = "Unknown Zone Name",
+        zoneId = selectedZoneId,
+        aetheryteList = {},
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            bossFates= {},
+            blacklistedFates= {
+            }
+        }
+    }
 end
 
 LastTeleportTimeStamp = 0
@@ -1010,6 +1053,7 @@ LastTeleportTimeStamp = 0
 --Start of the Loop
 
 LogInfo("[FATE] Starting fate farming script.")
+TurnOnRSR()
 
 while true do
     LogInfo("[FATE] Starting new iteration.")
@@ -1023,8 +1067,8 @@ while true do
 
     --food usage
     if not (GetCharacterCondition(CharacterCondition.casting) or GetCharacterCondition(CharacterCondition.transition)) then
-        if not HasStatusId(48) and (Food == "" == false) and FoodCheck <= 10 and not GetCharacterCondition(CharacterCondition.casting) and not GetCharacterCondition(CharacterCondition.transition) then
-            while not HasStatusId(48) and (Food == "" == false) and FoodCheck <= 10 and not GetCharacterCondition(CharacterCondition.casting) and not GetCharacterCondition(CharacterCondition.transition) do
+        if not HasStatusId(CharacterCondition.jumping) and (Food == "" == false) and FoodCheck <= 10 and not GetCharacterCondition(CharacterCondition.casting) and not GetCharacterCondition(CharacterCondition.transition) then
+            while not HasStatusId(CharacterCondition.jumping) and (Food == "" == false) and FoodCheck <= 10 and not GetCharacterCondition(CharacterCondition.casting) and not GetCharacterCondition(CharacterCondition.transition) do
                 while GetCharacterCondition(CharacterCondition.casting) or GetCharacterCondition(CharacterCondition.transition) do
                     yield("/wait 1")
                 end
@@ -1048,12 +1092,6 @@ while true do
         cCount = cCount +1
     end
     ---------------------------Select and Move to Fate--------------------------------------
-
-    while not IsPlayerAvailable() do
-        -- wait for player to be avialable
-        LogInfo("[FATE] Waiting for player to be available.")
-        yield("/wait 1")
-    end
 
     CurrentFate = SelectNextFate() -- init first fate object
 
@@ -1127,14 +1165,15 @@ while true do
         if GetCharacterCondition(CharacterCondition.flying) then
             yield("/echo Landing...")
             yield("/gaction dismount") -- first dismount call only lands the mount
+            yield("/wait 3")
             while GetCharacterCondition(CharacterCondition.flying) do
-                yield("/wait 1")
+                antistuck()
             end
         end
         yield("/echo Dismounting...")
         yield("/gaction dismount") -- actually dismount
         yield("/wait 1")
-        antistuck()
+        -- antistuck()
     end
 
     -- need to talk to npc to start fate
@@ -1142,6 +1181,10 @@ while true do
        GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 20
     then
         InteractWithFateNpc(CurrentFate)
+    else
+        if not UsePandoraSync then
+            yield("/lsync")
+        end
     end
 
     TurnOnRSR()
@@ -1203,10 +1246,7 @@ while true do
     yield("/echo [FATE] No longer in fate.")
 
     -----------------------------After Fate------------------------------------------
-    while GetCharacterCondition(CharacterCondition.inCombat) do
-        yield("/echo [FATE] Still in combat.")
-        yield("/wait 1")
-    end
+    HandleUnexpectedCombat()
     yield("/echo [FATE] Out of combat.")
 
     --Repair function
@@ -1451,11 +1491,6 @@ while true do
                     yield("/wait 0.5")
                     yield("/callback ShopExchangeCurrency true -1")
                     yield("/wait 1")
-                    yield("/tp "..teleport)
-                    yield("/wait 7")
-                    while GetCharacterCondition(CharacterCondition.transition) do
-                        yield("/wait 1")
-                    end
                 end
             end
         end
