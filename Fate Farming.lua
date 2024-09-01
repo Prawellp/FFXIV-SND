@@ -292,10 +292,11 @@ FatesData = {
                 { fateName= "Birds Up", npcName= "Coffee Farmer" },
                 { fateName= "Salty Showdown", npcName= "Chirwagur Sabreur" },
                 { fateName= "Fire Suppression", npcName= "Tsivli Stoutstrider" },
-                { fateName= "Panaq Attack", npcName= "Pelupelu Peddler" },
                 { fateName= "Wolf Parade", npcName= "Pelupelu Peddler" },
             },
-            bossFates= {},
+            bossFates= {
+                "Panaq Attack"
+            },
             blacklistedFates= {
                 "Young Volcanoes"
             }
