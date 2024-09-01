@@ -541,9 +541,9 @@ function TeleportTo(aetheryteName)
 end
 
 function HandleUnexpectedCombat()
+    TurnOnRSR()
     while GetCharacterCondition(CharacterCondition.inCombat)do
         if not HasTarget() or GetTargetHP() <= 0 then
-            TurnOnRSR()
             yield("/battletarget")
         end
         yield("/wait 1")
