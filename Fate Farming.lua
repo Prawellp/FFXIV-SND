@@ -10,7 +10,7 @@
   * Version *
   *  1.0.1  *
   ***********
-    -> 1.0.3    Bugfixes
+    -> 1.0.4    Bugfixes
     -> 1.0.0    Code changes
                     added pathing priority to prefer bonus fates -> most progress -> fate time left -> by distance
                     added map flag for next fate
@@ -98,7 +98,7 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 --false = no
 
 --Teleport and Voucher
-SelectedZoneName = "Heritage Found"  --Enter the name of the zone where you want to farm Fates
+SelectedZoneName = "Urqopacha"  --Enter the name of the zone where you want to farm Fates
 EnableChangeInstance = true      --should it Change Instance when there is no Fate (only works on DT fates)
 Exchange = false           --should it Exchange Vouchers
 OldV = false               --should it Exchange Old Vouchers
@@ -291,7 +291,7 @@ FatesData = {
                 { fateName= "Lay Off the Horns", npcName= "Yok Huy Vigilkeeper" },
                 { fateName= "Birds Up", npcName= "Coffee Farmer" },
                 { fateName= "Salty Showdown", npcName= "Chirwagur Sabreur" },
-                { fateName= "Fire Suprression", npcName= "Tsivli Stoutstrider" },
+                { fateName= "Fire Suppression", npcName= "Tsivli Stoutstrider" },
                 { fateName= "Panaq Attack", npcName= "Pelupelu Peddler" },
                 { fateName= "Wolf Parade", npcName= "Pelupelu Peddler" },
             },
@@ -314,7 +314,9 @@ FatesData = {
                 "Borne on the Backs of Burrowers"
             },
             otherNpcFates= {},
-            bossFates= {},
+            bossFates= {
+                "Sayona Your Prayers"
+            },
             blacklistedFates= {
                 "Mole Patrol"
             }
@@ -821,6 +823,8 @@ function InteractWithFateNpc(fate)
             yield("/wait 1")
         end
     end
+    yield("/wait 1")
+    yield("/lsync") -- there's a milisecond between when the fate starts and the lsync command becomes available, so Pandora's lsync won't trigger
     yield("/echo [FATE] Fate begun")
     LogInfo("[FATE] Exiting InteractWithFateNpc")
 end
