@@ -541,9 +541,12 @@ function TeleportTo(aetheryteName)
 end
 
 function HandleUnexpectedCombat()
-    while GetCharacterCondition(CharacterCondition.inCombat) do
-        yield("battletarget")
-        TurnOnRSR()
+    while GetCharacterCondition(CharacterCondition.inCombat)do
+        if not HasTarget() or GetTargetHP() <= 0 then
+            TurnOnRSR()
+            yield("/battletarget")
+        end
+        yield("/wait 1")
     end
 end
 
@@ -780,9 +783,7 @@ function InteractWithFateNpc(fate)
         yield("/wait 1")
 
         while not IsInFate() and GetCharacterCondition(CharacterCondition.inCombat) do
-            TurnOnRSR()
-            yield("/battletarget")
-            yield("/wait 1")
+            HandleUnexpectedCombat()
         end
 
         while not HasTarget() and IsFateActive(fate.fateId) and not IsInFate() do -- break conditions in case someone snipes the interact before you
