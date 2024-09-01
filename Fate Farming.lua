@@ -8,9 +8,9 @@
 
   ***********
   * Version *
-  *  1.0.5  *
+  *  1.0.6  *
   ***********
-    -> 1.0.5    Added partial support for other areas
+    -> 1.0.6    Added partial support for other areas
     -> 1.0.0    Code changes
                     added pathing priority to prefer bonus fates -> most progress -> fate time left -> by distance
                     added map flag for next fate
