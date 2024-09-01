@@ -8,9 +8,9 @@
 
   ***********
   * Version *
-  *  1.0.6  *
+  *  1.0.7  *
   ***********
-    -> 1.0.6    Added partial support for other areas
+    -> 1.0.7    Added partial support for other areas
     -> 1.0.0    Code changes
                     added pathing priority to prefer bonus fates -> most progress -> fate time left -> by distance
                     added map flag for next fate
@@ -126,6 +126,8 @@ slots = 5                  --how much inventory space before turning in
 --Other stuff
 ChocoboS = true            --should it Activate the Chocobo settings in Pandora (to summon it)
 Announce = 2
+
+UsePandoraSync = true
 --Change this value for how much echos u want in chat 
 --2 is the fate your Moving to and Bicolor gems amount
 --1 is only Bicolor gems
@@ -435,7 +437,9 @@ elseif ChocoboS == false then
 end
 
 --Fate settings
-PandoraSetFeatureState("Auto-Sync FATEs", true)
+if UsePandoraSync then
+    PandoraSetFeatureState("Auto-Sync FATEs", true)
+end
 PandoraSetFeatureState("FATE Targeting Mode", true)
 PandoraSetFeatureState("Action Combat Targeting", false)
 yield("/wait 0.5")
@@ -1175,6 +1179,10 @@ while true do
        GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 20
     then
         InteractWithFateNpc(CurrentFate)
+    else
+        if not UsePandoraSync then
+            yield("/lsync")
+        end
     end
 
     TurnOnRSR()
