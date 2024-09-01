@@ -1047,6 +1047,7 @@ LastTeleportTimeStamp = 0
 --Start of the Loop
 
 LogInfo("[FATE] Starting fate farming script.")
+TurnOnRSR()
 
 while true do
     LogInfo("[FATE] Starting new iteration.")
@@ -1060,8 +1061,8 @@ while true do
 
     --food usage
     if not (GetCharacterCondition(CharacterCondition.casting) or GetCharacterCondition(CharacterCondition.transition)) then
-        if not HasStatusId(48) and (Food == "" == false) and FoodCheck <= 10 and not GetCharacterCondition(CharacterCondition.casting) and not GetCharacterCondition(CharacterCondition.transition) then
-            while not HasStatusId(48) and (Food == "" == false) and FoodCheck <= 10 and not GetCharacterCondition(CharacterCondition.casting) and not GetCharacterCondition(CharacterCondition.transition) do
+        if not HasStatusId(CharacterCondition.jumping) and (Food == "" == false) and FoodCheck <= 10 and not GetCharacterCondition(CharacterCondition.casting) and not GetCharacterCondition(CharacterCondition.transition) then
+            while not HasStatusId(CharacterCondition.jumping) and (Food == "" == false) and FoodCheck <= 10 and not GetCharacterCondition(CharacterCondition.casting) and not GetCharacterCondition(CharacterCondition.transition) do
                 while GetCharacterCondition(CharacterCondition.casting) or GetCharacterCondition(CharacterCondition.transition) do
                     yield("/wait 1")
                 end
@@ -1085,12 +1086,6 @@ while true do
         cCount = cCount +1
     end
     ---------------------------Select and Move to Fate--------------------------------------
-
-    while not IsPlayerAvailable() do
-        -- wait for player to be avialable
-        LogInfo("[FATE] Waiting for player to be available.")
-        yield("/wait 1")
-    end
 
     CurrentFate = SelectNextFate() -- init first fate object
 
@@ -1241,10 +1236,7 @@ while true do
     yield("/echo [FATE] No longer in fate.")
 
     -----------------------------After Fate------------------------------------------
-    while GetCharacterCondition(CharacterCondition.inCombat) do
-        yield("/echo [FATE] Still in combat.")
-        yield("/wait 1")
-    end
+    HandleUnexpectedCombat()
     yield("/echo [FATE] Out of combat.")
 
     --Repair function
