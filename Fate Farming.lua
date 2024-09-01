@@ -10,7 +10,7 @@
   * Version *
   *  1.0.1  *
   ***********
-    -> 1.0.2    Bugfixes
+    -> 1.0.3    Bugfixes
     -> 1.0.0    Code changes
                     added pathing priority to prefer bonus fates -> most progress -> fate time left -> by distance
                     added map flag for next fate
